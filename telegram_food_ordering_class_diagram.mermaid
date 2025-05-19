@@ -1,0 +1,239 @@
+classDiagram
+    class User {
+        +uuid id
+        +string telegramId
+        +string firstName
+        +string lastName
+        +string username
+        +string phone
+        +string address
+        +datetime createdAt
+        +datetime updatedAt
+        +authenticate(initData: string): boolean
+        +getOrderHistory(): Order[]
+    }
+
+    class Category {
+        +uuid id
+        +string name
+        +string description
+        +string imageUrl
+        +integer sortOrder
+        +boolean isActive
+        +datetime createdAt
+        +datetime updatedAt
+        +getProducts(): Product[]
+    }
+
+    class Product {
+        +uuid id
+        +string productId
+        +string name
+        +decimal price
+        +uuid categoryId
+        +string description
+        +string imageUrl
+        +boolean isAvailable
+        +datetime createdAt
+        +datetime updatedAt
+        +getAddons(): AddonType[]
+        +getCategory(): Category
+    }
+
+    class AddonType {
+        +uuid id
+        +string name
+        +string description
+        +boolean isRequired
+        +boolean multipleSelection
+        +datetime createdAt
+        +datetime updatedAt
+        +getOptions(): AddonOption[]
+    }
+
+    class AddonOption {
+        +uuid id
+        +uuid addonTypeId
+        +string name
+        +decimal additionalPrice
+        +boolean isDefault
+        +datetime createdAt
+        +datetime updatedAt
+        +getAddonType(): AddonType
+    }
+
+    class ProductAddon {
+        +uuid id
+        +uuid productId
+        +uuid addonTypeId
+        +datetime createdAt
+        +datetime updatedAt
+        +getProduct(): Product
+        +getAddonType(): AddonType
+    }
+
+    class Cart {
+        +uuid id
+        +uuid userId
+        +datetime createdAt
+        +datetime updatedAt
+        +addItem(productId: string, quantity: integer, addons: AddonSelection[]): CartItem
+        +removeItem(itemId: string): boolean
+        +updateItemQuantity(itemId: string, quantity: integer): boolean
+        +clearCart(): void
+        +getTotal(): decimal
+        +getItems(): CartItem[]
+        +checkout(): Order
+    }
+
+    class CartItem {
+        +uuid id
+        +uuid cartId
+        +uuid productId
+        +integer quantity
+        +decimal unitPrice
+        +decimal totalPrice
+        +datetime createdAt
+        +datetime updatedAt
+        +getProduct(): Product
+        +getAddons(): CartItemAddon[]
+        +updateQuantity(quantity: integer): void
+    }
+
+    class CartItemAddon {
+        +uuid id
+        +uuid cartItemId
+        +uuid addonTypeId
+        +uuid addonOptionId
+        +datetime createdAt
+        +datetime updatedAt
+        +getAddonType(): AddonType
+        +getAddonOption(): AddonOption
+    }
+
+    class Order {
+        +uuid id
+        +uuid userId
+        +decimal subtotal
+        +decimal tax
+        +decimal deliveryFee
+        +decimal discount
+        +decimal total
+        +string status
+        +string paymentStatus
+        +string deliveryAddress
+        +string notes
+        +datetime createdAt
+        +datetime updatedAt
+        +getItems(): OrderItem[]
+        +getPayment(): Payment
+        +updateStatus(status: string): boolean
+        +cancel(): boolean
+    }
+
+    class OrderItem {
+        +uuid id
+        +uuid orderId
+        +uuid productId
+        +integer quantity
+        +decimal unitPrice
+        +decimal totalPrice
+        +datetime createdAt
+        +datetime updatedAt
+        +getProduct(): Product
+        +getAddons(): OrderItemAddon[]
+    }
+
+    class OrderItemAddon {
+        +uuid id
+        +uuid orderItemId
+        +uuid addonTypeId
+        +uuid addonOptionId
+        +string addonTypeName
+        +string addonOptionName
+        +decimal additionalPrice
+        +datetime createdAt
+        +datetime updatedAt
+    }
+
+    class Payment {
+        +uuid id
+        +uuid orderId
+        +string paymentMethod
+        +string paymentIntentId
+        +decimal amount
+        +string currency
+        +string status
+        +datetime paidAt
+        +datetime createdAt
+        +datetime updatedAt
+        +createPaymentIntent(): string
+        +confirmPayment(paymentIntentId: string): boolean
+    }
+
+    class TelegramAuth {
+        +validateInitData(initData: string): User
+        +generateToken(user: User): string
+        +verifyToken(token: string): User
+    }
+
+    class AuthController {
+        +authenticateUser(initData: string): User
+        +logout(): boolean
+    }
+
+    class ProductController {
+        +getCategories(): Category[]
+        +getProductsByCategory(categoryId: string): Product[]
+        +getProductDetails(productId: string): Product
+    }
+
+    class CartController {
+        +getCart(): Cart
+        +addToCart(productId: string, quantity: integer, addons: AddonSelection[]): Cart
+        +updateCartItem(itemId: string, quantity: integer): Cart
+        +removeFromCart(itemId: string): Cart
+        +clearCart(): Cart
+    }
+
+    class OrderController {
+        +createOrder(cartId: string, deliveryAddress: string, notes: string): Order
+        +getOrderHistory(): Order[]
+        +getOrderDetails(orderId: string): Order
+        +cancelOrder(orderId: string): boolean
+    }
+
+    class PaymentController {
+        +createPaymentIntent(orderId: string): string
+        +confirmPayment(paymentIntentId: string, orderId: string): boolean
+    }
+
+    class AdminController {
+        +getOrders(status: string): Order[]
+        +updateOrderStatus(orderId: string, status: string): boolean
+        +createProduct(product: Product): Product
+        +updateProduct(productId: string, product: Product): Product
+        +deleteProduct(productId: string): boolean
+    }
+
+    User "1" -- "*" Order: places
+    User "1" -- "1" Cart: has
+    Category "1" -- "*" Product: contains
+    Product "*" -- "*" AddonType: has
+    AddonType "1" -- "*" AddonOption: contains
+    Product <--> ProductAddon: associates
+    ProductAddon <--> AddonType: associates
+    Cart "1" -- "*" CartItem: contains
+    CartItem "1" -- "*" CartItemAddon: has
+    Order "1" -- "*" OrderItem: contains
+    OrderItem "1" -- "*" OrderItemAddon: has
+    Order "1" -- "1" Payment: has
+    AuthController -- TelegramAuth: uses
+    AuthController -- User: manages
+    ProductController -- Product: manages
+    ProductController -- Category: manages
+    CartController -- Cart: manages
+    OrderController -- Order: manages
+    PaymentController -- Payment: manages
+    AdminController -- Order: manages
+    AdminController -- Product: manages

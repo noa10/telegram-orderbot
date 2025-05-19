@@ -1,0 +1,134 @@
+sequenceDiagram
+    participant User
+    participant App as Telegram Mini App
+    participant Auth as Auth Controller
+    participant Telegram as Telegram API
+    participant Products as Product Controller
+    participant Cart as Cart Controller
+    participant Orders as Order Controller
+    participant Payment as Payment Controller
+    participant Stripe as Stripe API
+    participant DB as Supabase Database
+    participant Admin as Admin Panel
+
+    %% Authentication Flow
+    User->>App: Open Telegram Mini App
+    App->>Auth: Validate initData
+    Auth->>Telegram: Verify hash signature
+    Telegram-->>Auth: Validation result
+    Auth->>DB: Create/Get user record
+    DB-->>Auth: User data
+    Auth-->>App: Authentication result
+    App-->>User: Show authenticated UI
+
+    %% Product Browsing Flow
+    User->>App: Browse products
+    App->>Products: getCategories()
+    Products->>DB: Query categories
+    DB-->>Products: Categories data
+    Products-->>App: Display categories
+    User->>App: Select category
+    App->>Products: getProductsByCategory(categoryId)
+    Products->>DB: Query products
+    DB-->>Products: Products data
+    Products-->>App: Display products
+
+    %% Product Detail Flow
+    User->>App: Select product
+    App->>Products: getProductDetails(productId)
+    Products->>DB: Query product details
+    DB-->>Products: Product data
+    Products->>DB: Query product addons
+    DB-->>Products: Addon data
+    Products-->>App: Display product details
+
+    %% Add to Cart Flow
+    User->>App: Configure product options
+    User->>App: Add to cart
+    App->>Cart: addToCart(productId, quantity, addons)
+    Cart->>DB: Create/Update cart item
+    DB-->>Cart: Updated cart
+    Cart-->>App: Display updated cart
+    App-->>User: Show cart confirmation
+
+    %% Cart Management Flow
+    User->>App: View cart
+    App->>Cart: getCart()
+    Cart->>DB: Query cart items
+    DB-->>Cart: Cart data
+    Cart-->>App: Display cart
+    User->>App: Update item quantity
+    App->>Cart: updateCartItem(itemId, quantity)
+    Cart->>DB: Update cart item
+    DB-->>Cart: Updated cart
+    Cart-->>App: Display updated cart
+
+    %% Checkout Flow
+    User->>App: Proceed to checkout
+    App->>Orders: createOrder(cartId, deliveryAddress, notes)
+    Orders->>DB: Create order record
+    Orders->>DB: Create order items
+    DB-->>Orders: Order data
+    Orders-->>App: Display order summary
+    App->>Payment: createPaymentIntent(orderId)
+    Payment->>Stripe: Create payment intent
+    Stripe-->>Payment: Payment intent
+    Payment-->>App: Display payment form
+
+    %% Payment Flow
+    User->>App: Enter payment details
+    App->>Stripe: Submit payment details
+    Stripe-->>App: Payment confirmation
+    App->>Payment: confirmPayment(paymentIntentId, orderId)
+    Payment->>Stripe: Verify payment
+    Stripe-->>Payment: Payment status
+    Payment->>DB: Update order payment status
+    DB-->>Payment: Updated order
+    Payment-->>App: Display payment result
+    App-->>User: Show order confirmation
+
+    %% Order Tracking Flow
+    User->>App: View order history
+    App->>Orders: getOrderHistory()
+    Orders->>DB: Query user orders
+    DB-->>Orders: Order history
+    Orders-->>App: Display order history
+    User->>App: Select order
+    App->>Orders: getOrderDetails(orderId)
+    Orders->>DB: Query order details
+    DB-->>Orders: Order data
+    Orders-->>App: Display order details
+
+    %% Real-time Order Updates Flow
+    App->>DB: Subscribe to order updates
+    DB-->>App: Real-time order status updates
+    App-->>User: Update order status display
+
+    %% Admin Flow
+    Admin->>App: Access admin panel
+    App->>Auth: Verify admin credentials
+    Auth-->>App: Admin authentication
+    App->>Orders: getOrders(status)
+    Orders->>DB: Query orders
+    DB-->>Orders: Orders data
+    Orders-->>App: Display orders list
+    Admin->>App: Update order status
+    App->>Orders: updateOrderStatus(orderId, status)
+    Orders->>DB: Update order status
+    DB-->>Orders: Updated order
+    DB-->>User: Real-time order status update
+
+    %% Menu Management Flow
+    Admin->>App: Edit menu
+    App->>Products: createProduct(product) / updateProduct(productId, product)
+    Products->>DB: Create/Update product
+    DB-->>Products: Updated product data
+    Products-->>App: Display updated menu
+
+    %% Initialization Flow
+    Note over App,DB: Application Initialization
+    App->>DB: Initialize connection
+    App->>Products: Load initial catalog
+    Products->>DB: Query categories and featured products
+    DB-->>Products: Initial data
+    Products-->>App: Display home screen

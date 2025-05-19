@@ -1,0 +1,49 @@
+import React from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import AppLayout from './components/layout/AppLayout';
+import AdminLayout from './components/layout/AdminLayout';
+import HomePage from './pages/HomePage';
+import ProductListPage from './pages/ProductListPage';
+import ProductDetailPage from './pages/ProductDetailPage';
+import CartPage from './pages/CartPage';
+import CheckoutPage from './pages/CheckoutPage';
+import OrderHistoryPage from './pages/OrderHistoryPage';
+import OrderConfirmationPage from './pages/OrderConfirmationPage';
+import AdminOrdersPage from './pages/AdminOrdersPage';
+import AdminDashboardPage from './pages/AdminDashboardPage';
+
+// Placeholder Admin Pages
+const AdminProductsPage: React.FC = () => <div className="p-4"><h1 className="text-2xl font-bold">Products Management</h1><p>Products page coming soon!</p></div>;
+const AdminUsersPage: React.FC = () => <div className="p-4"><h1 className="text-2xl font-bold">Customer Management</h1><p>Customers page coming soon!</p></div>;
+const AdminAnalyticsPage: React.FC = () => <div className="p-4"><h1 className="text-2xl font-bold">Analytics</h1><p>Analytics page coming soon!</p></div>;
+const AdminSettingsPage: React.FC = () => <div className="p-4"><h1 className="text-2xl font-bold">Settings</h1><p>Settings page coming soon!</p></div>;
+
+function App() {
+  return (
+    <Routes>
+      <Route element={<AppLayout />}>
+        <Route index element={<Navigate to="/home" replace />} />
+        <Route path="/home" element={<HomePage />} />
+        <Route path="/menu" element={<ProductListPage />} />
+        <Route path="/product/:productId" element={<ProductDetailPage />} />
+        <Route path="/cart" element={<CartPage />} />
+        <Route path="/checkout" element={<CheckoutPage />} />
+        <Route path="/order-history" element={<OrderHistoryPage />} />
+        <Route path="/order-confirmation/:orderId" element={<OrderConfirmationPage />} />
+      </Route>
+      
+      {/* Admin Routes */}
+      <Route element={<AdminLayout />}>
+        <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+        <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+        <Route path="/admin/orders" element={<AdminOrdersPage />} />
+        <Route path="/admin/products" element={<AdminProductsPage />} />
+        <Route path="/admin/users" element={<AdminUsersPage />} />
+        <Route path="/admin/analytics" element={<AdminAnalyticsPage />} />
+        <Route path="/admin/settings" element={<AdminSettingsPage />} />
+      </Route>
+    </Routes>
+  );
+}
+
+export default App;

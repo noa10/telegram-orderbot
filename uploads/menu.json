@@ -1,0 +1,298 @@
+{
+  "categories": [
+    "Main",
+    "Side",
+    "Special Set",
+    "Beverages",
+    "Paste"
+  ],
+  "products": [
+    {
+      "id": "0001",
+      "name": "Beef Krapow Set with Beverages",
+      "price": 15.00,
+      "category": "Main",
+      "imageUrl": "https://d282v6zd99utr7.cloudfront.net/public/merchant/3173/31730001.jpg?1721145902",
+      "description": "Beef Krapow Set with Beverages",
+      "stockQuantity": 100,
+      "productCode": "0001",
+      "addons": {
+        "Spicy level*": [
+          "Non Spicy",
+          "Normal 🌶️",
+          "Spicy 🌶️🌶️",
+          "Extra Spicy 🌶️🌶️"
+        ],
+        "Basil*": [
+          "Thai Holy Basil (Krapow) - Default",
+          "Thai Basil (Selasih)",
+          "No Basil"
+        ],
+        "Weight": [
+          "125g - Default",
+          "250g"
+        ],
+        "Packaging": [
+          "Food Container (Photodegradable)",
+          "Food Container (Plastic)"
+        ],
+        "Beverages": [
+          "Kickapoo",
+          "Soya"
+        ]
+      }
+    },
+    {
+      "id": "0002",
+      "name": "Chicken Krapow Set with Beverages",
+      "price": 15.00,
+      "category": "Main",
+      "imageUrl": "https://d282v6zd99utr7.cloudfront.net/public/merchant/3173/31730002.jpg?1721145936",
+      "description": "Chicken Krapow Set with Beverages",
+      "stockQuantity": 100,
+      "productCode": "0002",
+      "addons": {
+        "Spicy level*": [
+          "Non Spicy",
+          "Normal 🌶️",
+          "Spicy 🌶️🌶️",
+          "Extra Spicy 🌶️🌶️"
+        ],
+        "Basil*": [
+          "Thai Holy Basil (Krapow) - Default",
+          "Thai Basil (Selasih)",
+          "No Basil"
+        ],
+        "Weight": [
+          "125g - Default",
+          "250g"
+        ],
+        "Packaging": [
+          "Food Container (Photodegradable)",
+          "Food Container (Plastic)"
+        ],
+        "Beverages": [
+          "Kickapoo",
+          "Soya"
+        ]
+      }
+    },
+    {
+      "id": "0003",
+      "name": "Beef Krapow Set",
+      "price": 12.50,
+      "category": "Main",
+      "imageUrl": "https://d282v6zd99utr7.cloudfront.net/public/merchant/3173/31730003.jpg?1721145955",
+      "description": "Beef Krapow Set",
+      "stockQuantity": 100,
+      "productCode": "0003",
+      "addons": {
+        "Spicy level*": [
+          "Non Spicy",
+          "Normal 🌶️",
+          "Spicy 🌶️🌶️",
+          "Extra Spicy 🌶️🌶️"
+        ],
+        "Basil*": [
+          "Thai Holy Basil (Krapow) - Default",
+          "Thai Basil (Selasih)",
+          "No Basil"
+        ],
+        "Weight": [
+          "125g - Default",
+          "250g"
+        ],
+        "Packaging": [
+          "Food Container (Photodegradable)",
+          "Food Container (Plastic)"
+        ]
+      }
+    },
+    {
+      "id": "0004",
+      "name": "Chicken Krapow Set",
+      "price": 12.50,
+      "category": "Main",
+      "imageUrl": "https://d282v6zd99utr7.cloudfront.net/public/merchant/3173/31730004.jpg?1721145974",
+      "description": "Chicken Krapow Set",
+      "stockQuantity": 100,
+      "productCode": "0004",
+      "addons": {
+        "Spicy level*": [
+          "Non Spicy",
+          "Normal 🌶️",
+          "Spicy 🌶️🌶️",
+          "Extra Spicy 🌶️🌶️"
+        ],
+        "Basil*": [
+          "Thai Holy Basil (Krapow) - Default",
+          "Thai Basil (Selasih)",
+          "No Basil"
+        ],
+        "Weight": [
+          "125g - Default",
+          "250g"
+        ],
+        "Packaging": [
+          "Food Container (Photodegradable)",
+          "Food Container (Plastic)"
+        ]
+      }
+    },
+    {
+      "id": "0005",
+      "name": "Beef Krapow Only",
+      "price": 8.50,
+      "category": "Side",
+      "imageUrl": "https://d282v6zd99utr7.cloudfront.net/public/merchant/3173/31730005.jpg?1721145989",
+      "description": "Beef Krapow Only",
+      "stockQuantity": 100,
+      "productCode": "0005",
+      "addons": {
+        "Spicy level*": [
+          "Non Spicy",
+          "Normal 🌶️",
+          "Spicy 🌶️🌶️",
+          "Extra Spicy 🌶️🌶️"
+        ],
+        "Basil*": [
+          "Thai Holy Basil (Krapow) - Default",
+          "Thai Basil (Selasih)",
+          "No Basil"
+        ],
+        "Weight": [
+          "125g - Default",
+          "250g"
+        ],
+        "Packaging": [
+          "Food Container (Photodegradable)",
+          "Food Container (Plastic)"
+        ]
+      }
+    },
+    {
+      "id": "0006",
+      "name": "Chicken Krapow Only",
+      "price": 8.50,
+      "category": "Side",
+      "imageUrl": "https://d282v6zd99utr7.cloudfront.net/public/merchant/3173/31730006.jpg?1721146004",
+      "description": "Chicken Krapow Only",
+      "stockQuantity": 100,
+      "productCode": "0006",
+      "addons": {
+        "Spicy level*": [
+          "Non Spicy",
+          "Normal 🌶️",
+          "Spicy 🌶️🌶️",
+          "Extra Spicy 🌶️🌶️"
+        ],
+        "Basil*": [
+          "Thai Holy Basil (Krapow) - Default",
+          "Thai Basil (Selasih)",
+          "No Basil"
+        ],
+        "Weight": [
+          "125g - Default",
+          "250g"
+        ]
+      }
+    },
+    {
+      "id": "0007",
+      "name": "Rice",
+      "price": 2.00,
+      "category": "Side",
+      "imageUrl": "https://d282v6zd99utr7.cloudfront.net/public/merchant/3173/31730007.jpg?1721146021",
+      "description": "Rice",
+      "stockQuantity": 100,
+      "productCode": "0007"
+    },
+    {
+      "id": "0008",
+      "name": "Fried Egg",
+      "price": 2.00,
+      "category": "Side",
+      "imageUrl": "https://d282v6zd99utr7.cloudfront.net/public/merchant/3173/31730008.jpg?1721146048",
+      "description": "Fried Egg",
+      "stockQuantity": 100,
+      "productCode": "0008"
+    },
+    {
+      "id": "0009",
+      "name": "Beef & Chicken Krapow Set",
+      "price": 25.00,
+      "category": "Special Set",
+      "imageUrl": "https://d282v6zd99utr7.cloudfront.net/public/merchant/3173/31730009.jpg?1721146090",
+      "description": "Beef & Chicken Krapow Set",
+      "stockQuantity": 100,
+      "productCode": "0009",
+      "addons": {
+        "Spicy level*": [
+          "Non Spicy",
+          "Normal 🌶️",
+          "Spicy 🌶️🌶️",
+          "Extra Spicy 🌶️🌶️"
+        ],
+        "Basil*": [
+          "Thai Holy Basil (Krapow) - Default",
+          "Thai Basil (Selasih)",
+          "No Basil"
+        ],
+        "Packaging": [
+          "Food Container (Photodegradable)",
+          "Food Container (Plastic)"
+        ]
+      }
+    },
+    {
+      "id": "0010",
+      "name": "Kickapoo (320ml)",
+      "price": 2.50,
+      "category": "Beverages",
+      "imageUrl": "https://d282v6zd99utr7.cloudfront.net/public/merchant/3173/31730010.jpg?1721147513",
+      "description": "Kickapoo (320ml)",
+      "stockQuantity": 100,
+      "productCode": "0010"
+    },
+    {
+      "id": "0015",
+      "name": "Winter Melon (300ml)",
+      "price": 2.20,
+      "category": "Beverages",
+      "imageUrl": "https://d282v6zd99utr7.cloudfront.net/public/merchant/3173/31730015.jpg?1721147533",
+      "description": "Winter Melon (300ml)",
+      "stockQuantity": 100,
+      "productCode": "0015"
+    },
+    {
+      "id": "0018",
+      "name": "Soya (300ml)",
+      "price": 2.20,
+      "category": "Beverages",
+      "imageUrl": "https://d282v6zd99utr7.cloudfront.net/public/merchant/3173/31730018.jpg?1721147602",
+      "description": "Soya (300ml)",
+      "stockQuantity": 100,
+      "productCode": "0018"
+    },
+    {
+      "id": "0019",
+      "name": "Ice Lemon Tea (300ml)",
+      "price": 2.20,
+      "category": "Beverages",
+      "imageUrl": "https://d282v6zd99utr7.cloudfront.net/public/merchant/3173/31730019.jpg?1721147625",
+      "description": "Ice Lemon Tea (300ml)",
+      "stockQuantity": 100,
+      "productCode": "0019"
+    },
+    {
+      "id": "0022",
+      "name": "Pes Krapow",
+      "price": 10.00,
+      "category": "Paste",
+      "imageUrl": "https://d282v6zd99utr7.cloudfront.net/public/merchant/3173/31730022.jpg?1741565200",
+      "description": "Pes Krapow",
+      "stockQuantity": 100,
+      "productCode": "0022"
+    }
+  ]
+}
