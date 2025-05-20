@@ -25,15 +25,17 @@ const AdminSettingsPage: React.FC = () => <div className="p-4"><h1 className="te
 function App() {
   return (
     <Routes>
+      {/* Authentication Routes - Outside AppLayout to avoid duplicate navigation */}
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/access-denied" element={<AccessDeniedPage />} />
+
       {/* Public Routes */}
       <Route element={<AppLayout />}>
         <Route index element={<Navigate to="/home" replace />} />
         <Route path="/home" element={<HomePage />} />
         <Route path="/menu" element={<ProductListPage />} />
         <Route path="/product/:productId" element={<ProductDetailPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/access-denied" element={<AccessDeniedPage />} />
       </Route>
 
       {/* Protected User Routes */}
