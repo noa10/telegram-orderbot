@@ -1,15 +1,26 @@
 # Telegram Food Ordering Mini App
 
-A Telegram Mini App for food ordering built with React, TypeScript, Vite, Shadcn UI, Supabase, and Stripe.
+A Telegram Mini App for food ordering built with React, TypeScript, Vite, Shadcn UI, Supabase, and Stripe. This application provides a seamless food ordering experience directly within Telegram.
 
 ## Features
 
-- Telegram Mini App integration with secure authentication
-- Product catalog with categories and search
+- Telegram Mini App integration with secure server-side validation of initData
+- Product catalog with categories, search, and filtering
 - Shopping cart with persistent storage
 - Checkout process with Stripe integration
 - Order history and tracking
 - Admin panel for order management
+- Responsive UI optimized for mobile devices
+- Real-time order updates using Supabase subscriptions
+
+## Tech Stack
+
+- **Frontend**: React, TypeScript, Vite, Tailwind CSS, Shadcn UI
+- **Backend**: Vercel Serverless Functions
+- **Database**: Supabase (PostgreSQL)
+- **Authentication**: Telegram Mini App authentication with server-side validation
+- **Payments**: Stripe
+- **Deployment**: Vercel
 
 ## Prerequisites
 
@@ -40,27 +51,32 @@ Create a `.env` file in the root directory with the following variables:
 
 ```
 # Telegram
-VITE_TELEGRAM_BOT_TOKEN=your_bot_token
-TELEGRAM_BOT_TOKEN=your_bot_token
+VITE_TELEGRAM_BOT_TOKEN=your_bot_token  # Client-side access (limited usage)
+TELEGRAM_BOT_TOKEN=your_bot_token       # Server-side access (for validation)
 
 # Supabase
 VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key  # Server-side only
 
 # Stripe
 VITE_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
-STRIPE_SECRET_KEY=your_stripe_secret_key
+STRIPE_SECRET_KEY=your_stripe_secret_key  # Server-side only
 
 # App URL
 VITE_APP_URL=http://localhost:5173  # For development
+# Use your Vercel deployment URL in production
 ```
 
 ### 4. Development
 
+Start the development server:
+
 ```bash
 pnpm dev
 ```
+
+The app will be available at http://localhost:5173. In development mode, the app includes a mock Telegram user for testing without deploying.
 
 ### 5. Build for production
 
@@ -83,10 +99,17 @@ pnpm build
 
 3. Set the web app URL to your deployed app URL (after deploying to Vercel)
 
+4. Optional: Set up commands for your bot using `/setcommands` in BotFather
+
 ## Deployment to Vercel
 
 1. Push your code to a GitHub repository
-2. Connect your repository to Vercel
+
+2. Connect your repository to Vercel:
+   - Sign in to Vercel and click "Add New Project"
+   - Import your GitHub repository
+   - Configure the project settings
+
 3. Set up the environment variables in Vercel:
    - `VITE_SUPABASE_URL`
    - `VITE_SUPABASE_ANON_KEY`
@@ -96,36 +119,96 @@ pnpm build
    - `VITE_STRIPE_PUBLISHABLE_KEY`
    - `STRIPE_SECRET_KEY`
    - `VITE_APP_URL` (your Vercel deployment URL)
-4. Deploy the app
+
+4. Deploy the app:
+   - Click "Deploy" and wait for the build to complete
+   - Vercel will automatically build and deploy your application
+
+5. Configure your Telegram bot to use the deployed URL:
+   - Go back to BotFather and update your bot's menu button URL to point to your Vercel deployment
 
 ## Testing the Mini App
 
 ### Local Testing
 
-For local testing, the app includes a development mode that mocks Telegram user data. You can test most functionality without deploying.
+For local testing, the app includes a development mode that mocks Telegram user data. You can test most functionality without deploying:
+
+1. Start the development server with `pnpm dev`
+2. The app will automatically use a mock Telegram user in development mode
+3. You can test all features except those requiring actual Telegram integration
 
 ### Testing with Telegram
 
 1. Deploy the app to Vercel
 2. Configure your bot's menu button to point to your deployed app URL
 3. Open your bot in Telegram and click the menu button
+4. The app will validate your Telegram user data on the server side
+5. You can now test the full functionality within Telegram
 
 ## Telegram Mini App Integration
 
 The app integrates with Telegram using the following components:
 
-1. **Telegram Web App SDK**: Included in `index.html`
-2. **Authentication**: Validates the `initData` from Telegram
-3. **UI Integration**: Uses Telegram's native UI elements when available
+1. **Telegram Web App SDK**: Included in `index.html` for accessing Telegram's Mini App features
+2. **Server-side Authentication**: Validates the `initData` from Telegram using HMAC-SHA-256 signatures
+3. **UI Integration**: Uses Telegram's native UI elements (MainButton, BackButton, etc.) when available
+4. **Responsive Design**: Optimized for the Telegram Mini App interface on mobile devices
+
+### Security Measures
+
+- All Telegram initData is validated on the server side using HMAC-SHA-256 signatures
+- Authentication data is checked for freshness (less than 24 hours old)
+- User data is securely stored in Supabase with appropriate access controls
 
 ## Supabase Database Schema
 
 The app uses the following tables in Supabase:
 
 1. **users**: Stores user information from Telegram
+   - `telegram_id`: Unique identifier from Telegram
+   - `first_name`, `last_name`, `username`: User profile information
+   - `language_code`: User's language preference
+   - `photo_url`: Profile photo URL
+   - `created_at`, `updated_at`: Timestamps
+
 2. **products**: Stores product information
+   - `id`: Unique product identifier
+   - `name`: Product name
+   - `description`: Product description
+   - `price`: Product price
+   - `image_url`: Product image URL
+   - `category`: Product category
+   - `available`: Availability status
+   - `addons`: JSON array of available add-ons
+
 3. **orders**: Stores order information
+   - `id`: Unique order identifier
+   - `user_id`: Reference to users table
+   - `status`: Order status (pending, confirmed, delivered, etc.)
+   - `total_amount`: Total order amount
+   - `payment_status`: Payment status
+   - `delivery_address`: Delivery address
+   - `created_at`, `updated_at`: Timestamps
+
 4. **order_items**: Stores order item information
+   - `id`: Unique order item identifier
+   - `order_id`: Reference to orders table
+   - `product_id`: Reference to products table
+   - `quantity`: Item quantity
+   - `price`: Item price at time of order
+   - `addons`: Selected add-ons for this item
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Telegram validation fails**: Ensure your `TELEGRAM_BOT_TOKEN` is correctly set in environment variables
+
+2. **Supabase connection issues**: Verify your Supabase URL and keys are correct
+
+3. **Development mode not working**: Make sure all dependencies are installed with `pnpm install`
+
+4. **Vercel deployment fails**: Check the build logs for errors and ensure all environment variables are set
 
 ## License
 
