@@ -28,5 +28,15 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <!-- Fallback script in case the module import fails -->
+    <script>
+      // Check if the app has loaded properly
+      setTimeout(function() {
+        if (document.body.innerHTML.trim() === '<div id="root"></div>') {
+          console.log('Application failed to load properly, attempting to reload...');
+          window.location.reload();
+        }
+      }, 3000);
+    </script>
   </body>
 </html>
