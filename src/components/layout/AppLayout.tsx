@@ -1,10 +1,10 @@
 import { Outlet } from 'react-router-dom';
-import Navbar from './Navbar';
+import UnifiedNav from './UnifiedNav'; // Import UnifiedNav
 
 const AppLayout = () => {
   return (
     <div className="flex flex-col min-h-screen">
-      <Navbar />
+      <UnifiedNav /> {/* Replace Navbar with UnifiedNav */}
       <main className="flex-grow container mx-auto px-4 py-8 pb-20 md:pb-8">
         <Outlet />
       </main>
@@ -13,4 +13,4 @@ const AppLayout = () => {
   );
 };
 
-export default AppLayout; 
+export default AppLayout;
