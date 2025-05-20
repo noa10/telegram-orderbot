@@ -4,15 +4,14 @@ import { cn } from '../../lib/utils';
 import { useAuth } from '../../context/AuthContext';
 
 const Navigation = () => {
-  const { user, isAuthenticated } = useAuth();
-  const isAdmin = user?.id === 12345678; // Replace with actual admin check logic
+  const { user, isAdmin } = useAuth();
 
   return (
     <nav className="sticky bottom-0 z-10 w-full border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
-        <NavLink 
-          to="/" 
-          className={({ isActive }) => 
+        <NavLink
+          to="/"
+          className={({ isActive }) =>
             cn(
               "flex flex-col items-center justify-center flex-1 pt-1 pb-1",
               isActive ? "text-primary" : "text-muted-foreground"
@@ -25,10 +24,10 @@ const Navigation = () => {
           </svg>
           <span className="text-xs mt-1">Home</span>
         </NavLink>
-        
-        <NavLink 
-          to="/cart" 
-          className={({ isActive }) => 
+
+        <NavLink
+          to="/cart"
+          className={({ isActive }) =>
             cn(
               "flex flex-col items-center justify-center flex-1 pt-1 pb-1",
               isActive ? "text-primary" : "text-muted-foreground"
@@ -42,10 +41,10 @@ const Navigation = () => {
           </svg>
           <span className="text-xs mt-1">Cart</span>
         </NavLink>
-        
-        <NavLink 
-          to="/orders" 
-          className={({ isActive }) => 
+
+        <NavLink
+          to="/orders"
+          className={({ isActive }) =>
             cn(
               "flex flex-col items-center justify-center flex-1 pt-1 pb-1",
               isActive ? "text-primary" : "text-muted-foreground"
@@ -62,11 +61,11 @@ const Navigation = () => {
           </svg>
           <span className="text-xs mt-1">Orders</span>
         </NavLink>
-        
+
         {isAdmin && (
-          <NavLink 
-            to="/admin" 
-            className={({ isActive }) => 
+          <NavLink
+            to="/admin"
+            className={({ isActive }) =>
               cn(
                 "flex flex-col items-center justify-center flex-1 pt-1 pb-1",
                 isActive ? "text-primary" : "text-muted-foreground"

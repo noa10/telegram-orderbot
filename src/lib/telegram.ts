@@ -97,7 +97,11 @@ export const validateTelegramWebAppData = async (initData: string) => {
     return data;
   } catch (error) {
     console.error('Error validating Telegram WebApp data:', error);
-    throw error;
+    return {
+      validated: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      user: null
+    };
   }
 };
 

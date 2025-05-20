@@ -1,13 +1,22 @@
 import { createClient } from '@supabase/supabase-js';
 import { createHmac } from 'crypto';
 
-// Initialize Supabase client
+// Initialize Supabase client with service role key for admin operations
 const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+
+if (!supabaseUrl || !supabaseServiceKey) {
+  console.error('Missing Supabase environment variables');
+}
+
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 // Telegram Bot Token from environment variables
 const botToken = process.env.TELEGRAM_BOT_TOKEN;
+
+if (!botToken) {
+  console.error('Missing Telegram Bot Token');
+}
 
 export default async function handler(req, res) {
   // Only allow POST requests
@@ -29,14 +38,14 @@ export default async function handler(req, res) {
     // Parse the initData string
     const urlParams = new URLSearchParams(initData);
     const hash = urlParams.get('hash');
-    
+
     if (!hash) {
       return res.status(400).json({ error: 'Invalid initData: missing hash' });
     }
 
     // Remove the hash from the data string for validation
     urlParams.delete('hash');
-    
+
     // Sort the params alphabetically as required by Telegram
     const dataCheckString = Array.from(urlParams.entries())
       .sort(([a], [b]) => a.localeCompare(b))
@@ -55,7 +64,7 @@ export default async function handler(req, res) {
     // Check if auth_date is recent (within the last day)
     const authDate = parseInt(urlParams.get('auth_date') || '0', 10);
     const currentTime = Math.floor(Date.now() / 1000);
-    
+
     if (currentTime - authDate > 86400) {
       return res.status(401).json({ error: 'Authentication data is outdated' });
     }
@@ -82,7 +91,8 @@ export default async function handler(req, res) {
 
     // Create or update user in Supabase
     if (!existingUser) {
-      const { error: createError } = await supabase
+      // Create new user
+      const { data: newUser, error: createError } = await supabase
         .from('users')
         .insert({
           telegram_id: userData.id,
@@ -91,11 +101,26 @@ export default async function handler(req, res) {
           username: userData.username || null,
           language_code: userData.language_code || null,
           photo_url: userData.photo_url || null,
-        });
+        })
+        .select()
+        .single();
 
       if (createError) {
         console.error('Error creating user:', createError);
         return res.status(500).json({ error: 'Failed to create user' });
+      }
+
+      // Assign default user role
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .insert({
+          user_id: newUser.id,
+          role_id: 1, // Default 'user' role
+        });
+
+      if (roleError) {
+        console.error('Error assigning role:', roleError);
+        return res.status(500).json({ error: 'Failed to assign user role' });
       }
     } else {
       // Update existing user data
@@ -115,12 +140,54 @@ export default async function handler(req, res) {
         console.error('Error updating user:', updateError);
         return res.status(500).json({ error: 'Failed to update user' });
       }
+
+      // Check if user has a role, if not assign default role
+      const { data: userRole, error: roleCheckError } = await supabase
+        .from('user_roles')
+        .select('*')
+        .eq('user_id', existingUser.id)
+        .maybeSingle();
+
+      if (roleCheckError) {
+        console.error('Error checking user role:', roleCheckError);
+        return res.status(500).json({ error: 'Failed to check user role' });
+      }
+
+      if (!userRole) {
+        // Assign default user role
+        const { error: roleError } = await supabase
+          .from('user_roles')
+          .insert({
+            user_id: existingUser.id,
+            role_id: 1, // Default 'user' role
+          });
+
+        if (roleError) {
+          console.error('Error assigning role:', roleError);
+          return res.status(500).json({ error: 'Failed to assign user role' });
+        }
+      }
     }
 
-    // Return validated user data
+    // Get user role
+    let userRole = 'user';
+    if (existingUser) {
+      const { data: roleData, error: roleError } = await supabase
+        .from('user_roles')
+        .select('roles(name)')
+        .eq('user_id', existingUser.id)
+        .single();
+
+      if (!roleError && roleData && roleData.roles) {
+        userRole = roleData.roles.name;
+      }
+    }
+
+    // Return validated user data with role
     return res.status(200).json({
       validated: true,
       user: userData,
+      role: userRole,
     });
   } catch (error) {
     console.error('Error validating Telegram data:', error);

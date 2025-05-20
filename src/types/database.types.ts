@@ -20,6 +20,8 @@ export interface Database {
           first_name: string
           last_name: string | null
           username: string | null
+          language_code: string | null
+          photo_url: string | null
           created_at: string
           updated_at: string
         }
@@ -29,6 +31,8 @@ export interface Database {
           first_name: string
           last_name?: string | null
           username?: string | null
+          language_code?: string | null
+          photo_url?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -38,8 +42,53 @@ export interface Database {
           first_name?: string
           last_name?: string | null
           username?: string | null
+          language_code?: string | null
+          photo_url?: string | null
           created_at?: string
           updated_at?: string
+        }
+      }
+      roles: {
+        Row: {
+          id: number
+          name: string
+          description: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          name: string
+          description?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          name?: string
+          description?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      user_roles: {
+        Row: {
+          id: number
+          user_id: string
+          role_id: number
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          user_id: string
+          role_id: number
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          user_id?: string
+          role_id?: number
+          created_at?: string
         }
       }
       products: {
