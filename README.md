@@ -72,12 +72,30 @@ VITE_APP_URL=http://localhost:5173  # For development
 
 Set up the database schema in Supabase:
 
-```bash
-# Make sure dependencies are installed
-pnpm install
+#### Option 1: Using the Supabase Dashboard (Recommended)
 
-# Run the setup script
-node scripts/setup-database.js
+1. Go to your Supabase project dashboard
+2. Navigate to the SQL Editor
+3. Create a new query
+4. Copy the contents of `supabase/migrations/20240520_initial_schema.sql` into the query editor
+5. Run the query
+
+#### Option 2: Using the Supabase CLI
+
+If you have the Supabase CLI installed:
+
+```bash
+# Install Supabase CLI if you haven't already
+npm install -g supabase
+
+# Login to Supabase
+supabase login
+
+# Link your project
+supabase link --project-ref your-project-ref
+
+# Push the migration
+supabase db push
 ```
 
 This will create the necessary tables in your Supabase database:
@@ -278,12 +296,9 @@ The app uses the following tables in Supabase:
 
 ### Common Issues
 
-1. **Database tables don't exist**: If you see errors like `relation "public.users" does not exist`, run the database setup script:
-   ```bash
-   node scripts/setup-database.js
-   ```
+1. **Database tables don't exist**: If you see errors like `relation "public.users" does not exist`, you need to set up the database tables:
 
-   If you encounter any issues with the script, make sure your environment variables are set correctly in the `.env` file.
+   Go to your Supabase dashboard, navigate to the SQL Editor, and run the SQL script in `supabase/migrations/20240520_initial_schema.sql`.
 
 2. **Telegram validation fails**:
    - Ensure your `TELEGRAM_BOT_TOKEN` is correctly set in environment variables
