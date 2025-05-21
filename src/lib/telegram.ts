@@ -91,8 +91,14 @@ export const getTelegramWebApp = (): TelegramWebApp | null => {
 // Function to validate init data on the server
 export const validateTelegramWebAppData = async (initData: string) => {
   try {
+    // Get the base URL from environment or use the current origin
+    const baseUrl = import.meta.env.VITE_APP_URL || window.location.origin;
+    const apiUrl = `${baseUrl}/api/auth/telegram/validate`;
+
+    console.log('Validating Telegram data with API URL:', apiUrl);
+
     // Call the backend API to validate the initData
-    const response = await fetch('/api/auth/telegram/validate', {
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -100,12 +106,16 @@ export const validateTelegramWebAppData = async (initData: string) => {
       body: JSON.stringify({ initData }),
     });
 
+    console.log('Validation response status:', response.status);
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || 'Failed to validate Telegram WebApp data');
+      console.error('Validation error response:', errorData);
+      throw new Error(errorData.error || `Failed to validate Telegram WebApp data: ${response.status}`);
     }
 
     const data = await response.json();
+    console.log('Validation successful:', data);
 
     if (!data.validated || !data.user) {
       throw new Error('Invalid Telegram authentication data');

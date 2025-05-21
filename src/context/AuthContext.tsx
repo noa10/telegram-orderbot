@@ -135,42 +135,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, []);
 
+  // Helper function to handle auth state changes - defined outside of useEffect for proper scope
+  const handleAuthStateChange = useCallback(async (session: any | null) => {
+    setError(null); // Clear any previous errors
+
+    try {
+      if (session) {
+        const { userProfile, role } = await fetchUserProfileAndRole(session.user.id);
+        setUser(userProfile);
+        setUserRole(role);
+      } else {
+        setUser(null);
+        setUserRole(null);
+      }
+    } catch (error) {
+      console.error('Error handling auth state change:', error);
+      setError(error instanceof Error ? error.message : 'Error handling authentication');
+    } finally {
+      setIsLoading(false); // End loading after state is fully processed
+    }
+  }, [fetchUserProfileAndRole]);
+
   // Initialize auth state
   useEffect(() => {
     // Keep track of whether the component is mounted
     let isMounted = true;
 
     const initAuth = async () => {
-      // Helper function to handle auth state changes
-      const handleAuthStateChange = async (session: any | null) => {
-        if (!isMounted) return; // Don't update state if component is unmounted
-
-        setError(null); // Clear any previous errors
-
-        try {
-          if (session) {
-            const { userProfile, role } = await fetchUserProfileAndRole(session.user.id);
-            if (isMounted) {
-              setUser(userProfile);
-              setUserRole(role);
-            }
-          } else {
-            if (isMounted) {
-              setUser(null);
-              setUserRole(null);
-            }
-          }
-        } catch (error) {
-          console.error('Error handling auth state change:', error);
-          if (isMounted) {
-            setError(error instanceof Error ? error.message : 'Error handling authentication');
-          }
-        } finally {
-          if (isMounted) {
-            setIsLoading(false); // End loading after state is fully processed
-          }
-        }
-      };
 
       // Set loading state at the beginning of auth initialization
       setIsLoading(true);
@@ -266,7 +257,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       isMounted = false; // Mark component as unmounted
       authListener?.subscription.unsubscribe();
     };
-  }, [fetchUserProfileAndRole, signInWithTelegram]); // Dependencies include both functions
+  }, [fetchUserProfileAndRole, signInWithTelegram, handleAuthStateChange]); // Dependencies include all functions
 
   // Sign in with email and password
   const signInWithEmail = async (email: string, password: string) => {
