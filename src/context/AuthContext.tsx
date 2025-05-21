@@ -63,6 +63,35 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const isAdmin = userRole === 'admin';
   const isMerchant = userRole === 'merchant';
 
+  // Define signInWithTelegram function with useCallback before it's used in useEffect
+  const signInWithTelegram = useCallback(async (telegramUser: TelegramUser, initData: string) => {
+    try {
+      setError(null);
+      const validationResponse = await validateTelegramWebAppData(initData);
+
+      if (!validationResponse.validated) {
+        throw new Error('Failed to validate Telegram data from server.');
+      }
+
+      // Use the existing createTelegramSession from lib/supabase.ts
+      // This function handles signing up or signing in with generated credentials
+      // and establishes a Supabase Auth session.
+      const supabaseAuthUser = await createTelegramSession(telegramUser);
+
+      if (!supabaseAuthUser) {
+        throw new Error('Failed to establish Supabase session for Telegram user.');
+      }
+
+      // The onAuthStateChange listener will now pick up the new session
+      // and update the user and userRole states.
+      return true;
+    } catch (e: any) {
+      console.error('Error signing in with Telegram:', e);
+      setError(e.message);
+      return false;
+    }
+  }, []);
+
   // Helper to fetch user profile and role from public tables
   const fetchUserProfileAndRole = useCallback(async (supabaseUserId: string) => {
     try {
@@ -101,51 +130,105 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Initialize auth state
   useEffect(() => {
+    // Keep track of whether the component is mounted
+    let isMounted = true;
+
     const initAuth = async () => {
+      // Helper function to handle auth state changes
       const handleAuthStateChange = async (session: any | null) => {
+        if (!isMounted) return; // Don't update state if component is unmounted
+
         setIsLoading(true); // Start loading when auth state changes or initializes
         setError(null); // Clear any previous errors
 
-        if (session) {
-          const { userProfile, role } = await fetchUserProfileAndRole(session.user.id);
-          setUser(userProfile);
-          setUserRole(role);
-        } else {
-          setUser(null);
-          setUserRole(null);
+        try {
+          if (session) {
+            const { userProfile, role } = await fetchUserProfileAndRole(session.user.id);
+            if (isMounted) {
+              setUser(userProfile);
+              setUserRole(role);
+            }
+          } else {
+            if (isMounted) {
+              setUser(null);
+              setUserRole(null);
+            }
+          }
+        } catch (error) {
+          console.error('Error handling auth state change:', error);
+          if (isMounted) {
+            setError(error instanceof Error ? error.message : 'Error handling authentication');
+          }
         }
-        setIsLoading(false); // End loading after state is fully processed
+
+        if (isMounted) {
+          setIsLoading(false); // End loading after state is fully processed
+        }
       };
 
       try {
-        // Check for Telegram WebApp
-        if (window.Telegram && window.Telegram.WebApp) {
-          setIsTelegramWebApp(true);
-          window.Telegram.WebApp.ready();
+        // Add a small delay to ensure Telegram WebApp is fully initialized
+        setTimeout(async () => {
+          try {
+            // Check for Telegram WebApp with more detailed logging
+            console.log('Auth initialization - Telegram WebApp check:', {
+              hasTelegramObject: !!window.Telegram,
+              hasWebAppObject: !!(window.Telegram && window.Telegram.WebApp),
+              hasInitData: !!(window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData),
+              hasInitDataUnsafe: !!(window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe),
+              hasUser: !!(window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user)
+            });
 
-          const tgUser = window.Telegram.WebApp.initDataUnsafe?.user;
-          const initData = window.Telegram.WebApp.initData;
+            if (window.Telegram && window.Telegram.WebApp) {
+              setIsTelegramWebApp(true);
 
-          if (tgUser && initData) {
-            // Create Telegram user object
-            const telegramUser: TelegramUser = {
-              id: tgUser.id,
-              first_name: tgUser.first_name,
-              last_name: tgUser.last_name,
-              username: tgUser.username,
-              language_code: tgUser.language_code,
-              photo_url: tgUser.photo_url,
-            };
+              // Call ready() to notify Telegram that the Mini App is ready
+              try {
+                window.Telegram.WebApp.ready();
+                console.log('Telegram WebApp ready() called successfully');
+              } catch (readyError) {
+                console.error('Error calling Telegram WebApp ready():', readyError);
+              }
 
-            // Sign in with Telegram
-            // This will trigger onAuthStateChange via createTelegramSession
-            await signInWithTelegram(telegramUser, initData);
+              // Safely access initDataUnsafe and user properties
+              const tgUser = window.Telegram.WebApp.initDataUnsafe?.user;
+              const initData = window.Telegram.WebApp.initData;
+
+              console.log('Telegram user data available:', !!tgUser);
+
+              if (tgUser && initData) {
+                // Create Telegram user object
+                const telegramUser: TelegramUser = {
+                  id: tgUser.id,
+                  first_name: tgUser.first_name,
+                  last_name: tgUser.last_name,
+                  username: tgUser.username,
+                  language_code: tgUser.language_code,
+                  photo_url: tgUser.photo_url,
+                };
+
+                // Sign in with Telegram
+                // This will trigger onAuthStateChange via createTelegramSession
+                await signInWithTelegram(telegramUser, initData);
+              } else {
+                console.warn('Telegram WebApp available but user data or initData is missing');
+                // Fall back to checking for existing session
+                const { data: { session } } = await supabase.auth.getSession();
+                await handleAuthStateChange(session);
+              }
+            } else {
+              console.log('Not running in Telegram WebApp environment, using normal authentication');
+              // Check for existing session
+              const { data: { session } } = await supabase.auth.getSession();
+              await handleAuthStateChange(session);
+            }
+          } catch (innerError) {
+            console.error('Error in Telegram initialization:', innerError);
+            // Fall back to checking for existing session
+            const { data: { session } } = await supabase.auth.getSession();
+            await handleAuthStateChange(session);
           }
-        } else {
-          // Check for existing session
-          const { data: { session } } = await supabase.auth.getSession();
-          await handleAuthStateChange(session);
-        }
+        }, 100); // Small delay to ensure Telegram WebApp is initialized
       } catch (e: any) {
         console.error('Error initializing auth:', e);
         setError(e.message);
@@ -163,9 +246,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     );
 
     return () => {
+      isMounted = false; // Mark component as unmounted
       authListener?.subscription.unsubscribe();
     };
-  }, [fetchUserProfileAndRole, signInWithTelegram]); // Added signInWithTelegram to dependencies
+  }, [fetchUserProfileAndRole, signInWithTelegram]); // Dependencies include both functions
 
   // Sign in with email and password
   const signInWithEmail = async (email: string, password: string) => {
@@ -244,35 +328,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // Sign in with Telegram
-  const signInWithTelegram = async (telegramUser: TelegramUser, initData: string) => {
-    try {
-      setError(null);
-      // ... (validation logic remains) ...
-      const validationResponse = await validateTelegramWebAppData(initData);
-
-      if (!validationResponse.validated) {
-        throw new Error('Failed to validate Telegram data from server.');
-      }
-
-      // Use the existing createTelegramSession from lib/supabase.ts
-      // This function handles signing up or signing in with generated credentials
-      // and establishes a Supabase Auth session.
-      const supabaseAuthUser = await createTelegramSession(telegramUser);
-
-      if (!supabaseAuthUser) {
-        throw new Error('Failed to establish Supabase session for Telegram user.');
-      }
-
-      // The onAuthStateChange listener will now pick up the new session
-      // and update the user and userRole states.
-      return true;
-    } catch (e: any) {
-      console.error('Error signing in with Telegram:', e);
-      setError(e.message);
-      return false;
-    }
-  };
+  // Sign in with Telegram is now defined above with useCallback
 
   // Sign out
   const signOut = async () => {

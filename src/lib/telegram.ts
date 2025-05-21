@@ -60,15 +60,32 @@ declare global {
 
 // Function to check if the app is running inside Telegram
 export const isTelegramWebApp = (): boolean => {
-  return window.Telegram?.WebApp !== undefined;
+  try {
+    // Add more detailed logging to help diagnose issues
+    console.log('Checking for Telegram WebApp:', {
+      hasTelegramObject: !!window.Telegram,
+      hasWebAppObject: !!(window.Telegram && window.Telegram.WebApp),
+      webAppInitialized: !!(window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData)
+    });
+
+    return window.Telegram?.WebApp !== undefined;
+  } catch (error) {
+    console.error('Error checking for Telegram WebApp:', error);
+    return false;
+  }
 };
 
 // Function to get Telegram WebApp instance
 export const getTelegramWebApp = (): TelegramWebApp | null => {
-  if (isTelegramWebApp()) {
-    return window.Telegram?.WebApp || null;
+  try {
+    if (isTelegramWebApp()) {
+      return window.Telegram?.WebApp || null;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error getting Telegram WebApp instance:', error);
+    return null;
   }
-  return null;
 };
 
 // Function to validate init data on the server

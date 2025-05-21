@@ -22,7 +22,35 @@
       worker-src * 'self' data: blob: https: http:;
       child-src * 'self' data: blob: https: http:;
     ">
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Load Telegram Web App script with error handling -->
+    <script>
+      // Function to load the Telegram Web App script
+      function loadTelegramScript() {
+        return new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = 'https://telegram.org/js/telegram-web-app.js';
+          script.async = true;
+          script.onload = () => {
+            console.log('Telegram Web App script loaded successfully');
+            resolve();
+          };
+          script.onerror = (error) => {
+            console.error('Failed to load Telegram Web App script:', error);
+            reject(error);
+          };
+          document.head.appendChild(script);
+        });
+      }
+
+      // Load the script and initialize the app
+      loadTelegramScript()
+        .then(() => {
+          console.log('Telegram WebApp available:', !!window.Telegram?.WebApp);
+        })
+        .catch(error => {
+          console.error('Error loading Telegram script:', error);
+        });
+    </script>
     <title>Food Ordering | Telegram Mini App</title>
   </head>
   <body>
