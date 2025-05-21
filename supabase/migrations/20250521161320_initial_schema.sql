@@ -1,3 +1,6 @@
+-- Enable UUID extension
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 -- Create users table
 CREATE TABLE IF NOT EXISTS public.users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -52,10 +55,20 @@ CREATE TABLE IF NOT EXISTS public.categories (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Add foreign key to products table
-ALTER TABLE public.products
-ADD CONSTRAINT fk_products_category
-FOREIGN KEY (category_id) REFERENCES public.categories(id) ON DELETE SET NULL;
+-- Add foreign key to products table if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'fk_products_category'
+        AND conrelid = 'public.products'::regclass
+    ) THEN
+        ALTER TABLE public.products
+        ADD CONSTRAINT fk_products_category
+        FOREIGN KEY (category_id) REFERENCES public.categories(id) ON DELETE SET NULL;
+    END IF;
+END
+$$;
 
 -- Create addons table
 CREATE TABLE IF NOT EXISTS public.addons (
@@ -143,56 +156,156 @@ ALTER TABLE public.product_addons ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.order_items ENABLE ROW LEVEL SECURITY;
 
--- Create policy for users to read their own data
-CREATE POLICY users_read_own ON public.users
-    FOR SELECT
-    USING (auth.uid()::text = id::text);
+-- Create policy for users to read their own data if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies
+        WHERE policyname = 'users_read_own'
+        AND tablename = 'users'
+    ) THEN
+        CREATE POLICY users_read_own ON public.users
+            FOR SELECT
+            USING (auth.uid()::text = id::text);
+    END IF;
+END
+$$;
 
--- Create policy for users to update their own data
-CREATE POLICY users_update_own ON public.users
-    FOR UPDATE
-    USING (auth.uid()::text = id::text);
+-- Create policy for users to update their own data if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies
+        WHERE policyname = 'users_update_own'
+        AND tablename = 'users'
+    ) THEN
+        CREATE POLICY users_update_own ON public.users
+            FOR UPDATE
+            USING (auth.uid()::text = id::text);
+    END IF;
+END
+$$;
 
--- Create policy for users to read products
-CREATE POLICY products_read_all ON public.products
-    FOR SELECT
-    USING (true);
+-- Create policy for users to read products if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies
+        WHERE policyname = 'products_read_all'
+        AND tablename = 'products'
+    ) THEN
+        CREATE POLICY products_read_all ON public.products
+            FOR SELECT
+            USING (true);
+    END IF;
+END
+$$;
 
--- Create policy for users to read categories
-CREATE POLICY categories_read_all ON public.categories
-    FOR SELECT
-    USING (true);
+-- Create policy for users to read categories if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies
+        WHERE policyname = 'categories_read_all'
+        AND tablename = 'categories'
+    ) THEN
+        CREATE POLICY categories_read_all ON public.categories
+            FOR SELECT
+            USING (true);
+    END IF;
+END
+$$;
 
--- Create policy for users to read addons
-CREATE POLICY addons_read_all ON public.addons
-    FOR SELECT
-    USING (true);
+-- Create policy for users to read addons if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies
+        WHERE policyname = 'addons_read_all'
+        AND tablename = 'addons'
+    ) THEN
+        CREATE POLICY addons_read_all ON public.addons
+            FOR SELECT
+            USING (true);
+    END IF;
+END
+$$;
 
--- Create policy for users to read addon options
-CREATE POLICY addon_options_read_all ON public.addon_options
-    FOR SELECT
-    USING (true);
+-- Create policy for users to read addon options if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies
+        WHERE policyname = 'addon_options_read_all'
+        AND tablename = 'addon_options'
+    ) THEN
+        CREATE POLICY addon_options_read_all ON public.addon_options
+            FOR SELECT
+            USING (true);
+    END IF;
+END
+$$;
 
--- Create policy for users to read product addons
-CREATE POLICY product_addons_read_all ON public.product_addons
-    FOR SELECT
-    USING (true);
+-- Create policy for users to read product addons if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies
+        WHERE policyname = 'product_addons_read_all'
+        AND tablename = 'product_addons'
+    ) THEN
+        CREATE POLICY product_addons_read_all ON public.product_addons
+            FOR SELECT
+            USING (true);
+    END IF;
+END
+$$;
 
--- Create policy for users to read their own orders
-CREATE POLICY orders_read_own ON public.orders
-    FOR SELECT
-    USING (auth.uid()::text = user_id::text);
+-- Create policy for users to read their own orders if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies
+        WHERE policyname = 'orders_read_own'
+        AND tablename = 'orders'
+    ) THEN
+        CREATE POLICY orders_read_own ON public.orders
+            FOR SELECT
+            USING (auth.uid()::text = user_id::text);
+    END IF;
+END
+$$;
 
--- Create policy for users to create orders
-CREATE POLICY orders_create_own ON public.orders
-    FOR INSERT
-    WITH CHECK (auth.uid()::text = user_id::text);
+-- Create policy for users to create orders if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies
+        WHERE policyname = 'orders_create_own'
+        AND tablename = 'orders'
+    ) THEN
+        CREATE POLICY orders_create_own ON public.orders
+            FOR INSERT
+            WITH CHECK (auth.uid()::text = user_id::text);
+    END IF;
+END
+$$;
 
--- Create policy for users to read their own order items
-CREATE POLICY order_items_read_own ON public.order_items
-    FOR SELECT
-    USING (EXISTS (
-        SELECT 1 FROM public.orders
-        WHERE orders.id = order_items.order_id
-        AND orders.user_id::text = auth.uid()::text
-    ));
+-- Create policy for users to read their own order items if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies
+        WHERE policyname = 'order_items_read_own'
+        AND tablename = 'order_items'
+    ) THEN
+        CREATE POLICY order_items_read_own ON public.order_items
+            FOR SELECT
+            USING (EXISTS (
+                SELECT 1 FROM public.orders
+                WHERE orders.id = order_items.order_id
+                AND orders.user_id::text = auth.uid()::text
+            ));
+    END IF;
+END
+$$;
