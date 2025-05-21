@@ -2,11 +2,15 @@ import { createClient } from '@supabase/supabase-js';
 import { createHmac } from 'crypto';
 
 // Initialize Supabase client with service role key for admin operations
-const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
+// Use correct environment variable names for server-side code
+const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
 if (!supabaseUrl || !supabaseServiceKey) {
-  console.error('Missing Supabase environment variables');
+  console.error('Missing Supabase environment variables:', {
+    hasUrl: !!supabaseUrl,
+    hasKey: !!supabaseServiceKey
+  });
 }
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -19,20 +23,39 @@ if (!botToken) {
 }
 
 export default async function handler(req, res) {
+  console.log('Telegram validation API called');
+
   // Only allow POST requests
   if (req.method !== 'POST') {
+    console.log('Method not allowed:', req.method);
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
+    console.log('Request body:', req.body);
     const { initData } = req.body;
 
     if (!initData) {
+      console.log('Missing initData in request');
       return res.status(400).json({ error: 'Missing initData' });
     }
 
     if (!botToken) {
+      console.log('Bot token not configured');
       return res.status(500).json({ error: 'Bot token not configured' });
+    }
+
+    // Check Supabase connection
+    try {
+      const { data: dbTest, error: dbError } = await supabase.from('roles').select('*').limit(1);
+      console.log('Database connection test:', { success: !dbError, error: dbError, data: dbTest });
+
+      if (dbError) {
+        console.error('Database connection error:', dbError);
+        return res.status(500).json({ error: 'Database connection error', details: dbError });
+      }
+    } catch (dbTestError) {
+      console.error('Failed to test database connection:', dbTestError);
     }
 
     // Parse the initData string

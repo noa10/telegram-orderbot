@@ -68,7 +68,31 @@ VITE_APP_URL=http://localhost:5173  # For development
 # Use your Vercel deployment URL in production
 ```
 
-### 4. Development
+### 4. Database Setup
+
+Set up the database schema in Supabase:
+
+```bash
+# Install dotenv for loading environment variables
+npm install dotenv
+
+# Run the setup script
+node scripts/setup-database.js
+```
+
+This will create the necessary tables in your Supabase database:
+- users
+- roles
+- user_roles
+- products
+- categories
+- addons
+- addon_options
+- product_addons
+- orders
+- order_items
+
+### 5. Development
 
 Start the development server:
 
@@ -78,7 +102,7 @@ pnpm dev
 
 The app will be available at http://localhost:5173. In development mode, the app includes a mock Telegram user for testing without deploying.
 
-### 5. Build for production
+### 6. Build for production
 
 ```bash
 pnpm build
@@ -165,50 +189,118 @@ The app integrates with Telegram using the following components:
 The app uses the following tables in Supabase:
 
 1. **users**: Stores user information from Telegram
+   - `id`: UUID primary key
    - `telegram_id`: Unique identifier from Telegram
    - `first_name`, `last_name`, `username`: User profile information
    - `language_code`: User's language preference
    - `photo_url`: Profile photo URL
    - `created_at`, `updated_at`: Timestamps
 
-2. **products**: Stores product information
-   - `id`: Unique product identifier
+2. **roles**: Defines user roles
+   - `id`: Serial primary key
+   - `name`: Role name (user, merchant, admin)
+   - `description`: Role description
+   - `created_at`, `updated_at`: Timestamps
+
+3. **user_roles**: Many-to-many relationship between users and roles
+   - `id`: Serial primary key
+   - `user_id`: Reference to users table
+   - `role_id`: Reference to roles table
+   - `created_at`, `updated_at`: Timestamps
+
+4. **products**: Stores product information
+   - `id`: UUID primary key
    - `name`: Product name
    - `description`: Product description
    - `price`: Product price
    - `image_url`: Product image URL
-   - `category`: Product category
-   - `available`: Availability status
-   - `addons`: JSON array of available add-ons
-
-3. **orders**: Stores order information
-   - `id`: Unique order identifier
-   - `user_id`: Reference to users table
-   - `status`: Order status (pending, confirmed, delivered, etc.)
-   - `total_amount`: Total order amount
-   - `payment_status`: Payment status
-   - `delivery_address`: Delivery address
+   - `is_available`: Availability status
+   - `category_id`: Reference to categories table
    - `created_at`, `updated_at`: Timestamps
 
-4. **order_items**: Stores order item information
-   - `id`: Unique order item identifier
-   - `order_id`: Reference to orders table
+5. **categories**: Product categories
+   - `id`: UUID primary key
+   - `name`: Category name
+   - `description`: Category description
+   - `created_at`, `updated_at`: Timestamps
+
+6. **addons**: Product add-ons (e.g., toppings, sizes)
+   - `id`: UUID primary key
+   - `name`: Add-on name
+   - `description`: Add-on description
+   - `is_required`: Whether the add-on is required
+   - `multiple_selection`: Whether multiple options can be selected
+   - `created_at`, `updated_at`: Timestamps
+
+7. **addon_options**: Options for each add-on
+   - `id`: UUID primary key
+   - `addon_id`: Reference to addons table
+   - `name`: Option name
+   - `additional_price`: Additional price for this option
+   - `is_default`: Whether this is the default option
+   - `created_at`, `updated_at`: Timestamps
+
+8. **product_addons**: Many-to-many relationship between products and addons
+   - `id`: Serial primary key
    - `product_id`: Reference to products table
-   - `quantity`: Item quantity
-   - `price`: Item price at time of order
-   - `addons`: Selected add-ons for this item
+   - `addon_id`: Reference to addons table
+   - `created_at`, `updated_at`: Timestamps
+
+9. **orders**: Stores order information
+   - `id`: UUID primary key
+   - `user_id`: Reference to users table
+   - `status`: Order status (pending, confirmed, delivered, etc.)
+   - `subtotal`: Order subtotal
+   - `tax`: Tax amount
+   - `delivery_fee`: Delivery fee
+   - `total_amount`: Total order amount
+   - `payment_intent_id`: Stripe payment intent ID
+   - `payment_status`: Payment status
+   - `delivery_address`: Delivery address
+   - `delivery_instructions`: Special instructions
+   - `customer_name`: Customer name
+   - `customer_phone`: Customer phone number
+   - `created_at`, `updated_at`: Timestamps
+
+10. **order_items**: Stores order item information
+    - `id`: UUID primary key
+    - `order_id`: Reference to orders table
+    - `product_id`: Reference to products table
+    - `name`: Product name at time of order
+    - `quantity`: Item quantity
+    - `unit_price`: Item unit price at time of order
+    - `item_total_price`: Total price for this item
+    - `image_url`: Product image URL at time of order
+    - `selected_addons`: JSONB of selected add-ons
+    - `created_at`, `updated_at`: Timestamps
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **Telegram validation fails**: Ensure your `TELEGRAM_BOT_TOKEN` is correctly set in environment variables
+1. **Database tables don't exist**: If you see errors like `relation "public.users" does not exist`, run the database setup script:
+   ```bash
+   node scripts/setup-database.js
+   ```
 
-2. **Supabase connection issues**: Verify your Supabase URL and keys are correct
+2. **Telegram validation fails**:
+   - Ensure your `TELEGRAM_BOT_TOKEN` is correctly set in environment variables
+   - Check that your server can access the Telegram API
+   - Verify that the initData is being properly passed from Telegram
 
-3. **Development mode not working**: Make sure all dependencies are installed with `pnpm install`
+3. **Supabase connection issues**:
+   - Verify your Supabase URL and keys are correct
+   - Check that you're using the right environment variables (`SUPABASE_URL` for server-side, `VITE_SUPABASE_URL` for client-side)
+   - Ensure your IP is allowed in Supabase's network restrictions
 
-4. **Vercel deployment fails**: Check the build logs for errors and ensure all environment variables are set
+4. **Development mode not working**:
+   - Make sure all dependencies are installed with `pnpm install`
+   - Check the console for any JavaScript errors
+
+5. **Vercel deployment fails**:
+   - Check the build logs for errors
+   - Ensure all environment variables are set correctly
+   - Verify that the serverless functions are properly configured
 
 ## License
 

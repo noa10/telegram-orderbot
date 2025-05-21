@@ -102,6 +102,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Helper to fetch user profile and role from public tables
   const fetchUserProfileAndRole = useCallback(async (supabaseUserId: string) => {
     try {
+      // Check if tables exist first by trying to query the users table
+      const { data: tableCheck, error: tableCheckError } = await supabase
+        .from('users')
+        .select('count(*)')
+        .limit(1);
+
+      // If we get a "relation does not exist" error, the tables haven't been created yet
+      if (tableCheckError && tableCheckError.code === '42P01') {
+        console.warn('Database tables do not exist yet. Please run the database setup script.');
+        // Return default values to allow the app to function
+        return {
+          userProfile: {
+            id: 0,
+            first_name: 'Guest',
+            last_name: '',
+            username: 'guest',
+            language_code: 'en',
+            photo_url: null
+          },
+          role: 'user'
+        };
+      }
+
+      // Continue with normal flow if tables exist
       const { data: userData, error: userError } = await supabase
         .from('users')
         .select('*')
@@ -110,7 +134,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (userError && userError.code !== 'PGRST116') { // PGRST116 is "not found"
         console.error('Error fetching user data:', userError);
-        return { userProfile: null, role: null };
+        return { userProfile: null, role: 'user' }; // Default to user role
       }
 
       let role = 'user'; // Default role
@@ -128,10 +152,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       }
 
-      return { userProfile: userData ? { id: userData.telegram_id || 0, first_name: userData.first_name, last_name: userData.last_name, username: userData.username, language_code: userData.language_code, photo_url: userData.photo_url } : null, role: role };
+      return {
+        userProfile: userData ? {
+          id: userData.telegram_id || 0,
+          first_name: userData.first_name,
+          last_name: userData.last_name,
+          username: userData.username,
+          language_code: userData.language_code,
+          photo_url: userData.photo_url
+        } : null,
+        role: role
+      };
     } catch (e) {
       console.error('Error in fetchUserProfileAndRole:', e);
-      return { userProfile: null, role: null };
+      // Return default values to allow the app to function
+      return { userProfile: null, role: 'user' };
     }
   }, []);
 
