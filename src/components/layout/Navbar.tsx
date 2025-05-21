@@ -24,8 +24,7 @@ const Navbar: React.FC = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="text-2xl font-bold text-primary flex items-center gap-2">
-            {/* <img src="/logo.svg" alt="Food App" className="h-8 w-8" /> You can add a logo here */}
-            FoodOrder
+            <img src="@/assets/madkrapow-logo-minimal.png" alt="Mad Krapow" className="h-10" />
           </Link>
 
           <div className="hidden md:flex items-center space-x-2 lg:space-x-4">
