@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { supabase } from '../lib/supabaseClient';
+import { supabase } from '../lib/supabase';
 import { ArrowUpRight, ArrowDownRight, ShoppingBag, Clock, Check, X } from 'lucide-react';
 import { formatPrice } from '../lib/utils';
 
@@ -184,7 +184,7 @@ const AdminDashboardPage: React.FC = () => {
                 </p>
               </CardContent>
             </Card>
-            
+
             <Card className="col-span-3">
               <CardHeader>
                 <CardTitle>Order Breakdown</CardTitle>
@@ -205,7 +205,7 @@ const AdminDashboardPage: React.FC = () => {
                         : 0}%
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-4">
                     <div className="bg-green-100 text-green-700 rounded-full p-1.5">
                       <Check className="h-4 w-4" />
@@ -220,7 +220,7 @@ const AdminDashboardPage: React.FC = () => {
                         : 0}%
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-4">
                     <div className="bg-red-100 text-red-700 rounded-full p-1.5">
                       <X className="h-4 w-4" />
@@ -245,4 +245,4 @@ const AdminDashboardPage: React.FC = () => {
   );
 };
 
-export default AdminDashboardPage; 
+export default AdminDashboardPage;

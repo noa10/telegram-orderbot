@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { supabase } from '../lib/supabaseClient';
+import { supabase } from '../lib/supabase';
 import { formatPrice } from '../lib/utils';
 import { Order } from '../types';
 import { useOrders } from '../context/OrderContext';
@@ -143,9 +143,9 @@ const AdminOrdersPage: React.FC = () => {
     const success = await updateOrderStatus(orderId, newStatus);
     if (success) {
       // Update the local orders list
-      const updatedOrders = allOrders.map(order => 
-        order.id === orderId 
-          ? { ...order, status: newStatus, updatedAt: new Date().toISOString() } 
+      const updatedOrders = allOrders.map(order =>
+        order.id === orderId
+          ? { ...order, status: newStatus, updatedAt: new Date().toISOString() }
           : order
       );
       setAllOrders(updatedOrders);
@@ -159,7 +159,7 @@ const AdminOrdersPage: React.FC = () => {
   // Status badge component with color coding
   const OrderStatusBadge = ({ status }: { status: Order['status'] }) => {
     let color = "";
-    
+
     switch (status) {
       case 'pending':
         color = "bg-yellow-100 text-yellow-800";
@@ -182,7 +182,7 @@ const AdminOrdersPage: React.FC = () => {
       default:
         color = "bg-gray-100 text-gray-800";
     }
-    
+
     return (
       <Badge className={`${color} rounded-full px-3 py-1`}>
         {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -350,4 +350,4 @@ const AdminOrdersPage: React.FC = () => {
   );
 };
 
-export default AdminOrdersPage; 
+export default AdminOrdersPage;

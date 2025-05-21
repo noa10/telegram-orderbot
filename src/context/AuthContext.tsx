@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import { TelegramUser } from '../types';
-import { supabase } from '../lib/supabaseClient';
-import { createTelegramSession } from '../lib/supabase'; // Import createTelegramSession
+import { supabase, createTelegramSession } from '../lib/supabase'; // Import both from the same file
 import { validateTelegramWebAppData } from '../lib/telegram';
 
 // Define the shape of the context data
@@ -67,7 +66,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signInWithTelegram = useCallback(async (telegramUser: TelegramUser, initData: string) => {
     try {
       setError(null);
+      // We don't set isLoading here because it's already set in initAuth
+      // and we want to avoid setting it twice
+
+      console.log('Starting Telegram validation with initData length:', initData?.length || 0);
       const validationResponse = await validateTelegramWebAppData(initData);
+      console.log('Telegram validation response:', validationResponse);
 
       if (!validationResponse.validated) {
         throw new Error('Failed to validate Telegram data from server.');
@@ -76,7 +80,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Use the existing createTelegramSession from lib/supabase.ts
       // This function handles signing up or signing in with generated credentials
       // and establishes a Supabase Auth session.
+      console.log('Creating Telegram session for user:', telegramUser.id);
       const supabaseAuthUser = await createTelegramSession(telegramUser);
+      console.log('Supabase auth user created:', !!supabaseAuthUser);
 
       if (!supabaseAuthUser) {
         throw new Error('Failed to establish Supabase session for Telegram user.');
@@ -88,6 +94,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (e: any) {
       console.error('Error signing in with Telegram:', e);
       setError(e.message);
+      setIsLoading(false); // Reset loading state on error
       return false;
     }
   }, []);
@@ -138,7 +145,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const handleAuthStateChange = async (session: any | null) => {
         if (!isMounted) return; // Don't update state if component is unmounted
 
-        setIsLoading(true); // Start loading when auth state changes or initializes
         setError(null); // Clear any previous errors
 
         try {
@@ -159,12 +165,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           if (isMounted) {
             setError(error instanceof Error ? error.message : 'Error handling authentication');
           }
-        }
-
-        if (isMounted) {
-          setIsLoading(false); // End loading after state is fully processed
+        } finally {
+          if (isMounted) {
+            setIsLoading(false); // End loading after state is fully processed
+          }
         }
       };
+
+      // Set loading state at the beginning of auth initialization
+      setIsLoading(true);
 
       try {
         // Add a small delay to ensure Telegram WebApp is fully initialized
@@ -232,7 +241,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       } catch (e: any) {
         console.error('Error initializing auth:', e);
         setError(e.message);
-        setIsLoading(false);
+        // Don't set isLoading to false here - let handleAuthStateChange do it
+        // Fall back to checking for existing session
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          await handleAuthStateChange(session);
+        } catch (fallbackError) {
+          console.error('Error in fallback session check:', fallbackError);
+          setIsLoading(false); // Only set to false if everything fails
+        }
       }
     };
 
@@ -255,6 +272,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signInWithEmail = async (email: string, password: string) => {
     try {
       setError(null);
+      // Set loading state to true during the sign-in process
+      setIsLoading(true);
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -273,6 +292,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (e: any) {
       console.error('Error signing in with email:', e);
       setError(e.message);
+      setIsLoading(false); // Reset loading state on error
       return false;
     }
   };
@@ -281,6 +301,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signUpWithEmail = async (email: string, password: string, userData: any) => {
     try {
       setError(null);
+      // Set loading state to true during the sign-up process
+      setIsLoading(true);
 
       // Create user in Supabase Auth
       const { error, data } = await supabase.auth.signUp({
@@ -324,6 +346,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (e: any) {
       console.error('Error signing up with email:', e);
       setError(e.message);
+      setIsLoading(false); // Reset loading state on error
       return false;
     }
   };
@@ -334,11 +357,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signOut = async () => {
     try {
       setError(null);
+      setIsLoading(true); // Set loading state during sign-out
 
       const { error } = await supabase.auth.signOut();
 
       if (error) throw error;
 
+      // The onAuthStateChange listener will handle setting user and userRole to null
+      // But we'll also set them directly for immediate UI feedback
       setUser(null);
       setUserRole(null);
 
@@ -346,6 +372,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (e: any) {
       console.error('Error signing out:', e);
       setError(e.message);
+      setIsLoading(false); // Reset loading state on error
       return false;
     }
   };

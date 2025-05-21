@@ -10,11 +10,14 @@ import {
   getTelegramUser,
   validateTelegramWebAppData
 } from '../lib/telegram';
-import { createTelegramSession } from '../lib/supabase';
 import { TelegramUser } from '../types';
+import { useAuth } from '../context/AuthContext';
 
 // Hook for Telegram Mini App functionality
 export const useTelegram = () => {
+  // Use the AuthContext for authentication
+  const { signInWithTelegram } = useAuth();
+
   const [user, setUser] = useState<TelegramUser | null>(null);
   const [isReady, setIsReady] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -46,8 +49,8 @@ export const useTelegram = () => {
                 if (validationResult.validated) {
                   setIsValidated(true);
 
-                  // Create a session in Supabase
-                  await createTelegramSession(validationResult.user);
+                  // Use AuthContext to create a session in Supabase
+                  await signInWithTelegram(userData, webApp.initData);
                 }
               } catch (validationError) {
                 console.error('Validation error:', validationError);
