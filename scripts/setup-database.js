@@ -1,10 +1,16 @@
 // Script to set up the database schema in Supabase
-const { createClient } = require('@supabase/supabase-js');
-const fs = require('fs');
-const path = require('path');
+import { createClient } from '@supabase/supabase-js';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
 
 // Load environment variables
-require('dotenv').config();
+dotenv.config();
+
+// Get current file directory (ES modules don't have __dirname)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Initialize Supabase client with service role key for admin operations
 const supabaseUrl = process.env.VITE_SUPABASE_URL;
@@ -20,19 +26,23 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 async function setupDatabase() {
   try {
     console.log('Setting up database schema...');
-    
+
     // Read the SQL file
     const sqlFilePath = path.join(__dirname, '../supabase/migrations/20240520_initial_schema.sql');
     const sqlContent = fs.readFileSync(sqlFilePath, 'utf8');
-    
+
+    console.log('Executing SQL on Supabase...');
+    console.log(`Supabase URL: ${supabaseUrl ? 'Set' : 'Not set'}`);
+    console.log(`Supabase Service Key: ${supabaseServiceKey ? 'Set' : 'Not set'}`);
+
     // Execute the SQL
     const { error } = await supabase.rpc('pgexec', { query: sqlContent });
-    
+
     if (error) {
       console.error('Error setting up database schema:', error);
       process.exit(1);
     }
-    
+
     console.log('Database schema set up successfully!');
   } catch (error) {
     console.error('Error:', error);
@@ -40,4 +50,5 @@ async function setupDatabase() {
   }
 }
 
+// Run the setup function
 setupDatabase();

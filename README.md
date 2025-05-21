@@ -73,8 +73,8 @@ VITE_APP_URL=http://localhost:5173  # For development
 Set up the database schema in Supabase:
 
 ```bash
-# Install dotenv for loading environment variables
-npm install dotenv
+# Make sure dependencies are installed
+pnpm install
 
 # Run the setup script
 node scripts/setup-database.js
@@ -282,6 +282,8 @@ The app uses the following tables in Supabase:
    ```bash
    node scripts/setup-database.js
    ```
+
+   If you encounter any issues with the script, make sure your environment variables are set correctly in the `.env` file.
 
 2. **Telegram validation fails**:
    - Ensure your `TELEGRAM_BOT_TOKEN` is correctly set in environment variables
