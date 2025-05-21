@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabaseClient';
+import { supabase } from '../lib/supabase';
 import { Order } from '../types';
 
 // Simple transformer function similar to what we had in OrderContext
@@ -139,8 +139,8 @@ export const getOrderByIdProxy = async (orderId: string): Promise<{data: Order |
 
 // Proxy function for creating a new order
 export const createOrderProxy = async (
-  userId: string, 
-  orderData: any, 
+  userId: string,
+  orderData: any,
   orderItems: any[]
 ): Promise<{data: Order | null, error: Error | null}> => {
   try {
@@ -217,14 +217,14 @@ export const createOrderProxy = async (
       .single();
 
     if (finalError) throw finalError;
-    
+
     // Return the transformed order
-    return { 
-      data: transformSupabaseOrder(finalOrder), 
-      error: null 
+    return {
+      data: transformSupabaseOrder(finalOrder),
+      error: null
     };
   } catch (err) {
     console.error('Proxy error creating order:', err);
     return { data: null, error: err as Error };
   }
-}; 
+};

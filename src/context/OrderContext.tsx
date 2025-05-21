@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import { supabase } from '../lib/supabase';
 import { Order, CartItem } from '../types';
 import { useAuth } from './AuthContext';
 import { toast } from 'sonner';
@@ -82,7 +82,7 @@ export const OrderProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         },
         async (payload) => {
           console.log('Orders change received:', payload);
-          
+
           // Handle different change types
           if (payload.eventType === 'INSERT') {
             // A new order was created
@@ -92,15 +92,15 @@ export const OrderProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           } else if (payload.eventType === 'UPDATE') {
             // An order was updated
             const updatedOrder = transformSupabaseOrder(payload.new);
-            setOrders(prev => 
+            setOrders(prev =>
               prev.map(order => order.id === updatedOrder.id ? updatedOrder : order)
             );
-            
+
             // If it's the current order being viewed, update that too
             if (currentOrder?.id === updatedOrder.id) {
               setCurrentOrder(updatedOrder);
             }
-            
+
             // Show a toast notification about the status change if it changed
             if (payload.old.status !== payload.new.status) {
               toast.info(`Order #${updatedOrder.id.substring(0, 8)} status updated to ${updatedOrder.status}`);
@@ -109,7 +109,7 @@ export const OrderProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             // An order was deleted
             setOrders(prev => prev.filter(order => order.id !== payload.old.id));
           }
-          
+
           // Refresh all orders to ensure consistency
           getUserOrders();
         }
@@ -130,10 +130,10 @@ export const OrderProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       // setError('User ID is not available to fetch orders.'); // Optional: set an error
       return []; // Silently return if no valid user ID
     }
-    
+
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
@@ -186,7 +186,7 @@ export const OrderProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const getOrderById = async (orderId: string): Promise<Order | null> => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
@@ -341,11 +341,11 @@ export const OrderProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         .single();
 
       if (finalError) throw finalError;
-      
+
       const transformedOrder = transformSupabaseOrder(finalOrder);
-      
+
       // Replace optimistic order with real order
-      setOrders(prev => 
+      setOrders(prev =>
         prev.map(order => order.id === optimisticOrderId ? transformedOrder : order)
       );
       setCurrentOrder(transformedOrder);
@@ -354,11 +354,11 @@ export const OrderProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     } catch (err: any) {
       console.error('Error creating order:', err);
       setError(`Failed to create order: ${err.message}`);
-      
+
       // Remove the optimistic order on failure
       setOrders(prev => prev.filter(order => order.id !== optimisticOrderId));
       setCurrentOrder(null);
-      
+
       return null;
     } finally {
       setIsLoading(false);
@@ -371,8 +371,8 @@ export const OrderProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setError(null);
 
     // Optimistic update
-    setOrders(prev => 
-      prev.map(order => 
+    setOrders(prev =>
+      prev.map(order =>
         order.id === orderId ? { ...order, status, updatedAt: new Date().toISOString() } : order
       )
     );
@@ -392,10 +392,10 @@ export const OrderProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     } catch (err: any) {
       console.error(`Error updating order ${orderId} status:`, err);
       setError(`Failed to update order status: ${err.message}`);
-      
+
       // Revert optimistic update on failure
       getUserOrders();
-      
+
       return false;
     } finally {
       setIsLoading(false);
@@ -426,4 +426,4 @@ export const useOrders = (): OrderContextType => {
     throw new Error('useOrders must be used within an OrderProvider');
   }
   return context;
-}; 
+};

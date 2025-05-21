@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Product, AddonType, AddonOption as AddonOptionType } from '../types';
-import { supabase } from '../lib/supabaseClient';
+import { supabase } from '../lib/supabase';
 
 interface ProductContextType {
   products: Product[];
@@ -68,7 +68,7 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
             image_url,
             is_available,
             category_id,
-            categories ( id, name ), 
+            categories ( id, name ),
             addons (
               id,
               name,
@@ -136,4 +136,4 @@ export const useProducts = (): ProductContextType => {
     throw new Error('useProducts must be used within a ProductProvider');
   }
   return context;
-}; 
+};
