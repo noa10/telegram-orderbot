@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { createHmac } from 'crypto';
+import { createHmac, randomBytes } from 'crypto';
 
 // Initialize Supabase client with service role key for admin operations
 // Use correct environment variable names for server-side code
@@ -107,123 +107,174 @@ export default async function handler(req, res) {
 
     // Extract user data
     const userDataString = urlParams.get('user') || '{}';
-    const userData = JSON.parse(userDataString);
+    const telegramUserData = JSON.parse(userDataString);
 
-    if (!userData.id) {
-      return res.status(400).json({ error: 'Invalid user data' });
+    if (!telegramUserData.id) {
+      return res.status(400).json({ error: 'Invalid user data: missing id' });
+    }
+    const telegramId = telegramUserData.id;
+
+    // Generate deterministic email and secure password
+    const email = `telegram_user_${telegramId}@example.com`;
+    const generatedPassword = randomBytes(16).toString('hex');
+
+    let auth_uid: string;
+    let authUserError: any;
+
+    // 4. Obtain or create the user in auth.users
+    const { data: { users: existingAuthUsers }, error: listError } = await supabase.auth.admin.listUsers({ email });
+
+    if (listError) {
+      console.error('Error listing auth users:', listError);
+      return res.status(500).json({ error: 'Error checking for existing authentication user', details: listError.message });
     }
 
-    // Check if user exists in Supabase
-    const { data: existingUser, error: userError } = await supabase
+    if (existingAuthUsers && existingAuthUsers.length > 0) {
+      auth_uid = existingAuthUsers[0].id;
+      console.log(`Auth user found with ID: ${auth_uid} for email: ${email}`);
+    } else {
+      console.log(`No auth user found for email: ${email}, creating new auth user.`);
+      const { data: newAuthUser, error: createAuthError } = await supabase.auth.admin.createUser({
+        email: email,
+        password: generatedPassword,
+        email_confirm: true, // Auto-confirm email for these users
+        user_metadata: { telegram_id: telegramId } // Optional: store telegram_id in auth.users metadata
+      });
+
+      if (createAuthError) {
+        console.error('Error creating auth user:', createAuthError);
+        return res.status(500).json({ error: 'Failed to create authentication user', details: createAuthError.message });
+      }
+      if (!newAuthUser || !newAuthUser.user || !newAuthUser.user.id) {
+        console.error('New auth user data is invalid:', newAuthUser);
+        return res.status(500).json({ error: 'Failed to get ID from new authentication user' });
+      }
+      auth_uid = newAuthUser.user.id;
+      console.log(`New auth user created with ID: ${auth_uid}`);
+    }
+
+    // 5. Synchronize with public.users table
+    let userProfile;
+    const { data: existingProfile, error: profileError } = await supabase
       .from('users')
-      .select('*')
-      .eq('telegram_id', userData.id)
-      .single();
+      .select('id, telegram_id, first_name, last_name, username, language_code, photo_url') // Select all relevant fields
+      .eq('telegram_id', telegramId)
+      .maybeSingle(); // Use maybeSingle to handle 0 or 1 row without error
 
-    if (userError && userError.code !== 'PGRST116') { // PGRST116 is "not found"
-      console.error('Error checking user:', userError);
-      return res.status(500).json({ error: 'Database error' });
+    if (profileError && profileError.code !== 'PGRST116') { // PGRST116 means "Not found"
+      console.error('Error checking user profile:', profileError);
+      return res.status(500).json({ error: 'Database error checking user profile', details: profileError.message });
     }
 
-    // Create or update user in Supabase
-    if (!existingUser) {
-      // Create new user
-      const { data: newUser, error: createError } = await supabase
+    const profileData = {
+      id: auth_uid, // Crucial: Set public.users.id to auth_uid
+      telegram_id: telegramId,
+      first_name: telegramUserData.first_name,
+      last_name: telegramUserData.last_name || null,
+      username: telegramUserData.username || null,
+      language_code: telegramUserData.language_code || null,
+      photo_url: telegramUserData.photo_url || null,
+      updated_at: new Date().toISOString(),
+    };
+
+    if (existingProfile) {
+      console.log(`Updating existing profile for telegram_id: ${telegramId} with auth_uid: ${auth_uid}`);
+      const { data: updatedProfile, error: updateProfileError } = await supabase
         .from('users')
-        .insert({
-          telegram_id: userData.id,
-          first_name: userData.first_name,
-          last_name: userData.last_name || null,
-          username: userData.username || null,
-          language_code: userData.language_code || null,
-          photo_url: userData.photo_url || null,
-        })
+        .update(profileData)
+        .eq('telegram_id', telegramId)
         .select()
         .single();
 
-      if (createError) {
-        console.error('Error creating user:', createError);
-        return res.status(500).json({ error: 'Failed to create user' });
+      if (updateProfileError) {
+        console.error('Error updating user profile:', updateProfileError);
+        return res.status(500).json({ error: 'Failed to update user profile', details: updateProfileError.message });
       }
-
-      // Assign default user role
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .insert({
-          user_id: newUser.id,
-          role_id: 1, // Default 'user' role
-        });
-
-      if (roleError) {
-        console.error('Error assigning role:', roleError);
-        return res.status(500).json({ error: 'Failed to assign user role' });
-      }
+      userProfile = updatedProfile;
+      console.log('User profile updated:', userProfile);
     } else {
-      // Update existing user data
-      const { error: updateError } = await supabase
+      console.log(`No existing profile for telegram_id: ${telegramId}, creating new profile with auth_uid: ${auth_uid}`);
+      const { data: newProfile, error: insertProfileError } = await supabase
         .from('users')
-        .update({
-          first_name: userData.first_name,
-          last_name: userData.last_name || null,
-          username: userData.username || null,
-          language_code: userData.language_code || null,
-          photo_url: userData.photo_url || null,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('telegram_id', userData.id);
-
-      if (updateError) {
-        console.error('Error updating user:', updateError);
-        return res.status(500).json({ error: 'Failed to update user' });
-      }
-
-      // Check if user has a role, if not assign default role
-      const { data: userRole, error: roleCheckError } = await supabase
-        .from('user_roles')
-        .select('*')
-        .eq('user_id', existingUser.id)
-        .maybeSingle();
-
-      if (roleCheckError) {
-        console.error('Error checking user role:', roleCheckError);
-        return res.status(500).json({ error: 'Failed to check user role' });
-      }
-
-      if (!userRole) {
-        // Assign default user role
-        const { error: roleError } = await supabase
-          .from('user_roles')
-          .insert({
-            user_id: existingUser.id,
-            role_id: 1, // Default 'user' role
-          });
-
-        if (roleError) {
-          console.error('Error assigning role:', roleError);
-          return res.status(500).json({ error: 'Failed to assign user role' });
-        }
-      }
-    }
-
-    // Get user role
-    let userRole = 'user';
-    if (existingUser) {
-      const { data: roleData, error: roleError } = await supabase
-        .from('user_roles')
-        .select('roles(name)')
-        .eq('user_id', existingUser.id)
+        .insert(profileData)
+        .select()
         .single();
 
-      if (!roleError && roleData && roleData.roles) {
-        userRole = roleData.roles.name;
+      if (insertProfileError) {
+        console.error('Error inserting user profile:', insertProfileError);
+        return res.status(500).json({ error: 'Failed to insert user profile', details: insertProfileError.message });
       }
+      userProfile = newProfile;
+      console.log('User profile created:', userProfile);
     }
+
+    // 6. Synchronize roles in public.user_roles
+    const { data: existingUserRole, error: roleCheckError } = await supabase
+      .from('user_roles')
+      .select('*')
+      .eq('user_id', auth_uid)
+      .maybeSingle();
+
+    if (roleCheckError) {
+      console.error('Error checking user role:', roleCheckError);
+      return res.status(500).json({ error: 'Failed to check user role', details: roleCheckError.message });
+    }
+
+    if (!existingUserRole) {
+      console.log(`No role found for user_id: ${auth_uid}, assigning default 'user' role.`);
+      const defaultRoleId = 1; // Assuming 'user' role ID is 1. Consider fetching dynamically if it can change.
+      const { error: insertRoleError } = await supabase
+        .from('user_roles')
+        .insert({
+          user_id: auth_uid,
+          role_id: defaultRoleId, // Default 'user' role
+        });
+
+      if (insertRoleError) {
+        console.error('Error assigning default role:', insertRoleError);
+        // Non-critical, but log it. User will effectively be 'user' by default RLS policies.
+        // Potentially return an error if role assignment is critical for immediate functionality.
+        // For now, we'll proceed.
+      } else {
+        console.log(`Default 'user' role assigned to user_id: ${auth_uid}`);
+      }
+    } else {
+      console.log(`User_id: ${auth_uid} already has a role:`, existingUserRole);
+    }
+
+    // Get the user's role name for the response
+    let userRoleName = 'user'; // Default if lookup fails or no role found (though we try to assign one)
+    const { data: roleData, error: fetchRoleError } = await supabase
+      .from('user_roles')
+      .select('roles(name)')
+      .eq('user_id', auth_uid)
+      .maybeSingle(); // Use maybeSingle as user might not have a role or role table might be inaccessible
+
+    if (fetchRoleError) {
+      console.warn('Could not fetch role name for user:', auth_uid, fetchRoleError.message);
+      // Keep default 'user' roleName
+    } else if (roleData && roleData.roles && roleData.roles.name) {
+      userRoleName = roleData.roles.name;
+    } else if (roleData && !roleData.roles) {
+        // This case means the user_roles entry exists, but the join to roles failed (e.g. role_id is invalid)
+        // Or roles table is empty for that role_id.
+        console.warn(`User role entry found for ${auth_uid} but no corresponding role name in 'roles' table. Role data:`, roleData);
+    }
+
 
     // Return validated user data with role
     return res.status(200).json({
       validated: true,
-      user: userData,
-      role: userRole,
+      user: { // Return the profile data from public.users which now includes the correct id
+        id: userProfile.id, // This is auth_uid
+        telegram_id: userProfile.telegram_id,
+        first_name: userProfile.first_name,
+        last_name: userProfile.last_name,
+        username: userProfile.username,
+        language_code: userProfile.language_code,
+        photo_url: userProfile.photo_url,
+      },
+      role: userRoleName,
     });
   } catch (error) {
     console.error('Error validating Telegram data:', error);

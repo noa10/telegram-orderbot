@@ -153,6 +153,11 @@ CREATE POLICY users_update_own ON public.users
     FOR UPDATE
     USING (auth.uid()::text = id::text);
 
+-- Create policy for users to insert their own data
+CREATE POLICY users_insert_own ON public.users
+    FOR INSERT
+    WITH CHECK (auth.uid() = id);
+
 -- Create policy for users to read products
 CREATE POLICY products_read_all ON public.products
     FOR SELECT
@@ -196,3 +201,8 @@ CREATE POLICY order_items_read_own ON public.order_items
         WHERE orders.id = order_items.order_id
         AND orders.user_id::text = auth.uid()::text
     ));
+
+-- Create policy for users to insert their own default role
+CREATE POLICY user_roles_insert_own_default ON public.user_roles
+    FOR INSERT
+    WITH CHECK (auth.uid() = user_id AND role_id = (SELECT id FROM public.roles WHERE name = 'user'));
