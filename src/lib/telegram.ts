@@ -95,6 +95,9 @@ export const validateTelegramWebAppData = async (initData: string) => {
     const baseUrl = import.meta.env.VITE_APP_URL || window.location.origin;
     const apiUrl = `${baseUrl}/api/auth/telegram/validate`;
 
+    // Log the API URL for debugging
+    console.log('API URL for Telegram validation:', apiUrl);
+
     console.log('Validating Telegram data with API URL:', apiUrl);
 
     // Call the backend API to validate the initData
@@ -109,9 +112,23 @@ export const validateTelegramWebAppData = async (initData: string) => {
     console.log('Validation response status:', response.status);
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('Validation error response:', errorData);
-      throw new Error(errorData.error || `Failed to validate Telegram WebApp data: ${response.status}`);
+      let errorMessage = `Failed to validate Telegram WebApp data: ${response.status}`;
+      try {
+        const errorData = await response.json();
+        console.error('Validation error response:', errorData);
+        if (errorData.error) {
+          errorMessage = errorData.error;
+        }
+      } catch (jsonError) {
+        console.error('Failed to parse error response as JSON:', jsonError);
+        try {
+          const textError = await response.text();
+          console.error('Error response text:', textError);
+        } catch (textError) {
+          console.error('Failed to get error response text:', textError);
+        }
+      }
+      throw new Error(errorMessage);
     }
 
     const data = await response.json();

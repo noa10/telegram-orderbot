@@ -68,7 +68,7 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
             image_url,
             is_available,
             category_id,
-            categories ( id, name ),
+            categories!products_category_id_fkey ( id, name ),
             addons (
               id,
               name,

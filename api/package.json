@@ -1,0 +1,14 @@
+{
+  "name": "telegram-orderbot-api",
+  "version": "1.0.0",
+  "description": "API functions for Telegram OrderBot",
+  "main": "index.js",
+  "type": "module",
+  "engines": {
+    "node": ">=18.x"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.0.0",
+    "crypto": "^1.0.1"
+  }
+}
