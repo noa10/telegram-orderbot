@@ -42,29 +42,34 @@ const LoginPage: React.FC = () => {
       return;
     }
 
-    const success = await signInWithEmail(email, password);
+    try {
+      const success = await signInWithEmail(email, password);
 
-    if (success) {
-      // Redirect to the page they tried to visit or home
-      navigate(from, { replace: true });
+      if (success) {
+        // Redirect to the page they tried to visit or home
+        navigate(from, { replace: true });
+      }
+    } catch (err: any) {
+      console.error('Login error:', err);
+      setFormError(err.message || 'An error occurred during login');
     }
   };
 
   return (
-    <Layout title="Login" hideNavigation={false}>
-      <div className="flex justify-center items-center min-h-[80vh] px-4 pt-8">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="text-2xl">Login</CardTitle>
-            <CardDescription>
+    <Layout title="Login" hideNavigation={true}>
+      <div className="flex justify-center items-center min-h-[calc(100vh-8rem)] md:min-h-[calc(100vh-10rem)] px-4 py-8 md:py-12">
+        <Card className="w-full max-w-md shadow-md border-border/60">
+          <CardHeader className="space-y-1 pb-2">
+            <CardTitle className="text-2xl font-bold text-center">Login</CardTitle>
+            <CardDescription className="text-center">
               Enter your credentials to access your account
             </CardDescription>
           </CardHeader>
 
-          <CardContent>
+          <CardContent className="pt-4 pb-2">
             <form onSubmit={handleSubmit} className="space-y-4">
               {(error || formError) && (
-                <Alert variant="destructive">
+                <Alert variant="destructive" className="mb-6">
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>
                     {formError || error}
@@ -73,7 +78,7 @@ const LoginPage: React.FC = () => {
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email" className="text-sm font-medium">Email</Label>
                 <Input
                   id="email"
                   type="email"
@@ -81,15 +86,16 @@ const LoginPage: React.FC = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isLoading}
+                  className="h-10"
                 />
               </div>
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password" className="text-sm font-medium">Password</Label>
                   <Link
                     to="/forgot-password"
-                    className="text-sm text-primary hover:underline"
+                    className="text-xs text-primary hover:underline"
                   >
                     Forgot password?
                   </Link>
@@ -100,12 +106,13 @@ const LoginPage: React.FC = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={isLoading}
+                  className="h-10"
                 />
               </div>
 
               <Button
                 type="submit"
-                className="w-full"
+                className="w-full h-10 mt-2"
                 disabled={isLoading}
               >
                 {isLoading ? 'Signing in...' : 'Sign in'}
@@ -113,10 +120,10 @@ const LoginPage: React.FC = () => {
             </form>
           </CardContent>
 
-          <CardFooter className="flex flex-col space-y-4">
+          <CardFooter className="flex flex-col pt-1 pb-4">
             <div className="text-sm text-center text-muted-foreground">
               Don't have an account?{' '}
-              <Link to="/register" className="text-primary hover:underline">
+              <Link to="/register" className="text-primary font-medium hover:underline">
                 Create an account
               </Link>
             </div>

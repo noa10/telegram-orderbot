@@ -15,6 +15,9 @@ import AdminDashboardPage from './pages/AdminDashboardPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import AccessDeniedPage from './pages/AccessDeniedPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
+import ProfilePage from './pages/ProfilePage';
 
 // Placeholder Admin Pages
 const AdminProductsPage: React.FC = () => <div className="p-4"><h1 className="text-2xl font-bold">Products Management</h1><p>Products page coming soon!</p></div>;
@@ -28,6 +31,8 @@ function App() {
       {/* Authentication Routes - Outside AppLayout to avoid duplicate navigation */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/access-denied" element={<AccessDeniedPage />} />
 
       {/* Public Routes */}
@@ -45,6 +50,7 @@ function App() {
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/order-history" element={<OrderHistoryPage />} />
           <Route path="/order-confirmation/:orderId" element={<OrderConfirmationPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
         </Route>
       </Route>
 

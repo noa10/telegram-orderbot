@@ -1,20 +1,28 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '../../lib/utils';
 import { useAuth } from '../../context/AuthContext';
 
 const Navigation = () => {
   const { user, isAdmin } = useAuth();
+  const location = useLocation();
+
+  // Determine if we're on an auth page
+  const isAuthPage = ['/login', '/register', '/forgot-password', '/reset-password'].includes(location.pathname);
 
   return (
-    <nav className="sticky bottom-0 z-10 w-full border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between">
+    <nav className={cn(
+      "fixed bottom-0 z-50 w-full border-t border-border/40 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/60 shadow-sm",
+      // Hide on desktop for auth pages
+      isAuthPage ? "md:hidden" : ""
+    )}>
+      <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
         <NavLink
           to="/"
           className={({ isActive }) =>
             cn(
-              "flex flex-col items-center justify-center flex-1 pt-1 pb-1",
-              isActive ? "text-primary" : "text-muted-foreground"
+              "flex flex-col items-center justify-center flex-1 pt-2 pb-1 transition-colors duration-200",
+              isActive ? "text-primary font-medium" : "text-muted-foreground hover:text-foreground"
             )
           }
         >
@@ -29,8 +37,8 @@ const Navigation = () => {
           to="/cart"
           className={({ isActive }) =>
             cn(
-              "flex flex-col items-center justify-center flex-1 pt-1 pb-1",
-              isActive ? "text-primary" : "text-muted-foreground"
+              "flex flex-col items-center justify-center flex-1 pt-2 pb-1 transition-colors duration-200",
+              isActive ? "text-primary font-medium" : "text-muted-foreground hover:text-foreground"
             )
           }
         >
@@ -43,11 +51,11 @@ const Navigation = () => {
         </NavLink>
 
         <NavLink
-          to="/orders"
+          to="/order-history"
           className={({ isActive }) =>
             cn(
-              "flex flex-col items-center justify-center flex-1 pt-1 pb-1",
-              isActive ? "text-primary" : "text-muted-foreground"
+              "flex flex-col items-center justify-center flex-1 pt-2 pb-1 transition-colors duration-200",
+              isActive ? "text-primary font-medium" : "text-muted-foreground hover:text-foreground"
             )
           }
         >
@@ -62,13 +70,29 @@ const Navigation = () => {
           <span className="text-xs mt-1">Orders</span>
         </NavLink>
 
+        <NavLink
+          to="/profile"
+          className={({ isActive }) =>
+            cn(
+              "flex flex-col items-center justify-center flex-1 pt-2 pb-1 transition-colors duration-200",
+              isActive ? "text-primary font-medium" : "text-muted-foreground hover:text-foreground"
+            )
+          }
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-user">
+            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+          <span className="text-xs mt-1">Profile</span>
+        </NavLink>
+
         {isAdmin && (
           <NavLink
             to="/admin"
             className={({ isActive }) =>
               cn(
-                "flex flex-col items-center justify-center flex-1 pt-1 pb-1",
-                isActive ? "text-primary" : "text-muted-foreground"
+                "flex flex-col items-center justify-center flex-1 pt-2 pb-1 transition-colors duration-200",
+                isActive ? "text-primary font-medium" : "text-muted-foreground hover:text-foreground"
               )
             }
           >
